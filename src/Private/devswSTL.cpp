@@ -1,2 +1,2 @@
 #include "devswSTL.h"
-void devswSTL Init() {}
+void LEBNITZ Init() {}
