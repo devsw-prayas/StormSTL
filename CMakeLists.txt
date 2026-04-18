@@ -6,17 +6,27 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 file(GLOB_RECURSE StormSTL_HEADERS  CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/Public/*.h")
+file(GLOB_RECURSE StormSTL_COMPILER  CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/Compiler/*.h")
+file(GLOB_RECURSE StormSTL_INTRIN  CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/Intrin/*.h")
+file(GLOB_RECURSE StormSTL_SOURCE   CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/Private/*.cpp")
+file(GLOB_RECURSE StormSTL_INL      CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/Public/*.inl")
 
-add_library(StormSTL INTERFACE
+add_library(StormSTL SHARED
     ${StormSTL_HEADERS}
+    ${StormSTL_COMPILER}
+    ${StormSTL_INTRIN}
+    ${StormSTL_SOURCE}
+    ${StormSTL_INL}
 )
+target_compile_definitions(StormSTL PRIVATE StormSTL_EXPORTS STL_SHARED)
 
-target_include_directories(StormSTL INTERFACE
+target_include_directories(StormSTL PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Public
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/Compiler
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/Intrin
 )
 
-if (MSVC)
-    target_compile_options(StormSTL INTERFACE /W4 /permissive-)
-else()
-    target_compile_options(StormSTL INTERFACE -Wall -Wextra -Wpedantic)
-endif()
+target_precompile_headers(StormSTL PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/Public/StormSTL.h)
+
+target_compile_options(StormSTL PRIVATE
+)

@@ -97,3 +97,7 @@ Makefile
 # Unreal Engine backup files
 *.bak
 *.backup
+
+# Claude 
+.claude/
+.production/
