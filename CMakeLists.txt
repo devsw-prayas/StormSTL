@@ -18,6 +18,15 @@ add_library(StormSTL SHARED
     ${StormSTL_SOURCE}
     ${StormSTL_INL}
 )
+
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES
+    ${StormSTL_HEADERS}
+    ${StormSTL_COMPILER}
+    ${StormSTL_INTRIN}
+    ${StormSTL_SOURCE}
+    ${StormSTL_INL}
+)
+
 target_compile_definitions(StormSTL PRIVATE StormSTL_EXPORTS STL_SHARED)
 
 target_include_directories(StormSTL PUBLIC
