@@ -1,22 +1,19 @@
 #pragma once
 #include <StlCompiler.h>
-#if defined(STL_SHARED)
 
-#if STL_COMPILER_MSVC
-#if defined(StormSTL_EXPORTS)
+#ifndef STL_RUNTIME_API
+#if defined(_WIN32) || defined(__CYGWIN__)
+#if defined(STL_SHARED)
 #define STL_RUNTIME_API __declspec(dllexport)
 #else
 #define STL_RUNTIME_API __declspec(dllimport)
 #endif
-#elif STL_COMPILER_CLANG || STL_COMPILER_GCC
+
+#elif defined(__GNUC__) || defined(__clang__)
 #define STL_RUNTIME_API __attribute__((visibility("default")))
 #else
 #define STL_RUNTIME_API
 #endif
-
-#else
-// Static build -> no import/export
-#define STL_RUNTIME_API
 #endif
 
 #include <type_traits>
@@ -27,3 +24,6 @@
 #else
 #define STL_EDITOR_MODE 0
 #endif
+
+#include "StlMemoryUtils.h"
+#include "StlMemory.h"
