@@ -19,6 +19,7 @@
 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND...
 */
 #pragma once
+#include "StormSTL.h"
 
 namespace Storm::STL::Memory {
 	enum class STL_RUNTIME_API MemoryState : uint8_t {

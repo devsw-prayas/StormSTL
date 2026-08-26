@@ -28,7 +28,7 @@
 
 namespace Storm::STL::Memory {
 	using namespace Internal;
-
+	
 	size_t NativeMemory::alignToPage(size_t v_Size) {
 		const size_t page = pageInfo().m_PageSize;
 		return (v_Size + page - 1) & ~(page - 1);
