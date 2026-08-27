@@ -327,7 +327,259 @@ namespace Stl::Internal::V {
 			else STL_UNREACHABLE();
 		}
 	};
+	#endif
+
+	// Canonical vectorized zero-register construction.
+	template<VType Type, typename T>
+	struct SetZero final {
+		STL_INVOCABLE(SetZero)
+		using r = VIntrospect<Type>::template RType<T>;
+
+	public:
+		static STL_FORCEINLINE r invoke() noexcept {
+			STL_UNREACHABLE();
+		}
+	};
+
+#if STL_SSE_SUPPORT
+	template<typename T>
+	struct SetZero<VType::V_SSE, T> final {
+		STL_INVOCABLE(SetZero)
+		using r = VIntrospect<VType::V_SSE>::template RType<T>;
+
+	public:
+		static STL_FORCEINLINE r invoke() noexcept {
+			if constexpr (IsInteger<T>::value) return _mm_setzero_si128();
+			else if constexpr (IsFloat<T>::value) return _mm_setzero_ps();
+			else if constexpr (IsDouble<T>::value) return _mm_setzero_pd();
+			else STL_UNREACHABLE();
+		}
+	};
 #endif
+
+#if STL_AVX_SUPPORT
+	template<typename T>
+	struct SetZero<VType::V_AVX, T> final {
+		STL_INVOCABLE(SetZero)
+		using r = VIntrospect<VType::V_AVX>::template RType<T>;
+
+	public:
+		static STL_FORCEINLINE r invoke() noexcept {
+			if constexpr (IsInteger<T>::value) return _mm256_setzero_si256();
+			else if constexpr (IsFloat<T>::value) return _mm256_setzero_ps();
+			else if constexpr (IsDouble<T>::value) return _mm256_setzero_pd();
+			else STL_UNREACHABLE();
+		}
+	};
+#endif
+
+#if STL_AVX512_SUPPORT
+	template<typename T>
+	struct SetZero<VType::V_AVX512, T> final {
+		STL_INVOCABLE(SetZero)
+		using r = VIntrospect<VType::V_AVX512>::template RType<T>;
+
+	public:
+		static STL_FORCEINLINE r invoke() noexcept {
+			if constexpr (IsInteger<T>::value) return _mm512_setzero_si512();
+			else if constexpr (IsFloat<T>::value) return _mm512_setzero_ps();
+			else if constexpr (IsDouble<T>::value) return _mm512_setzero_pd();
+			else STL_UNREACHABLE();
+		}
+	};
+#endif
+
+	// Canonical vectorized scalar broadcast.
+	template<VType Type, typename T>
+	struct Set1 final {
+		STL_INVOCABLE(Set1)
+		using r = VIntrospect<Type>::template RType<T>;
+
+	public:
+		static STL_FORCEINLINE r invoke(T v_Value) noexcept {
+			STL_UNREACHABLE();
+		}
+	};
+
+#if STL_SSE_SUPPORT
+	template<typename T>
+	struct Set1<VType::V_SSE, T> final {
+		STL_INVOCABLE(Set1)
+		using r = VIntrospect<VType::V_SSE>::template RType<T>;
+
+	public:
+		static STL_FORCEINLINE r invoke(T v_Value) noexcept {
+			if constexpr (IsInteger<T>::value) {
+				if constexpr (sizeof(T) == 1) return _mm_set1_epi8(static_cast<char>(v_Value));
+				else if constexpr (sizeof(T) == 2) return _mm_set1_epi16(static_cast<short>(v_Value));
+				else if constexpr (sizeof(T) == 4) return _mm_set1_epi32(static_cast<int>(v_Value));
+				else if constexpr (sizeof(T) == 8) return _mm_set1_epi64x(static_cast<long long>(v_Value));
+			}
+			else if constexpr (IsFloat<T>::value) return _mm_set1_ps(v_Value);
+			else if constexpr (IsDouble<T>::value) return _mm_set1_pd(v_Value);
+			STL_UNREACHABLE();
+		}
+	};
+#endif
+
+#if STL_AVX_SUPPORT
+	template<typename T>
+	struct Set1<VType::V_AVX, T> final {
+		STL_INVOCABLE(Set1)
+		using r = VIntrospect<VType::V_AVX>::template RType<T>;
+
+	public:
+		static STL_FORCEINLINE r invoke(T v_Value) noexcept {
+			if constexpr (IsInteger<T>::value) {
+				if constexpr (sizeof(T) == 1) return _mm256_set1_epi8(static_cast<char>(v_Value));
+				else if constexpr (sizeof(T) == 2) return _mm256_set1_epi16(static_cast<short>(v_Value));
+				else if constexpr (sizeof(T) == 4) return _mm256_set1_epi32(static_cast<int>(v_Value));
+				else if constexpr (sizeof(T) == 8) return _mm256_set1_epi64x(static_cast<long long>(v_Value));
+			}
+			else if constexpr (IsFloat<T>::value) return _mm256_set1_ps(v_Value);
+			else if constexpr (IsDouble<T>::value) return _mm256_set1_pd(v_Value);
+			STL_UNREACHABLE();
+		}
+	};
+#endif
+
+#if STL_AVX512_SUPPORT
+	template<typename T>
+	struct Set1<VType::V_AVX512, T> final {
+		STL_INVOCABLE(Set1)
+		using r = VIntrospect<VType::V_AVX512>::template RType<T>;
+
+	public:
+		static STL_FORCEINLINE r invoke(T v_Value) noexcept {
+			if constexpr (IsInteger<T>::value) {
+				if constexpr (sizeof(T) == 1) return _mm512_set1_epi8(static_cast<char>(v_Value));
+				else if constexpr (sizeof(T) == 2) return _mm512_set1_epi16(static_cast<short>(v_Value));
+				else if constexpr (sizeof(T) == 4) return _mm512_set1_epi32(static_cast<int>(v_Value));
+				else if constexpr (sizeof(T) == 8) return _mm512_set1_epi64(static_cast<long long>(v_Value));
+			}
+			else if constexpr (IsFloat<T>::value) return _mm512_set1_ps(v_Value);
+			else if constexpr (IsDouble<T>::value) return _mm512_set1_pd(v_Value);
+			STL_UNREACHABLE();
+		}
+	};
+#endif
+
+	// Canonical byte-wise vector equality comparison.
+	template<VType Type, typename T>
+	struct CompareEqual final {
+		STL_INVOCABLE(CompareEqual)
+		using r = VIntrospect<Type>::template RType<T>;
+
+	public:
+		static STL_FORCEINLINE r invoke(r v_Left, r v_Right) noexcept {
+			STL_UNREACHABLE();
+		}
+	};
+
+#if STL_SSE2_SUPPORT
+	template<typename T>
+	struct CompareEqual<VType::V_SSE, T> final {
+		STL_INVOCABLE(CompareEqual)
+		using r = VIntrospect<VType::V_SSE>::template RType<T>;
+
+	public:
+		static STL_FORCEINLINE r invoke(r v_Left, r v_Right) noexcept {
+			if constexpr (sizeof(T) == 1 && IsInteger<T>::value) return _mm_cmpeq_epi8(v_Left, v_Right);
+			else STL_UNREACHABLE();
+		}
+	};
+#endif
+
+#if STL_AVX2_SUPPORT
+	template<typename T>
+	struct CompareEqual<VType::V_AVX, T> final {
+		STL_INVOCABLE(CompareEqual)
+		using r = VIntrospect<VType::V_AVX>::template RType<T>;
+
+	public:
+		static STL_FORCEINLINE r invoke(r v_Left, r v_Right) noexcept {
+			if constexpr (sizeof(T) == 1 && IsInteger<T>::value) return _mm256_cmpeq_epi8(v_Left, v_Right);
+			else STL_UNREACHABLE();
+		}
+	};
+#endif
+
+#if STL_AVX512BW_SUPPORT
+	template<typename T>
+	struct CompareEqual<VType::V_AVX512, T> final {
+		STL_INVOCABLE(CompareEqual)
+		using m = VIntrospect<VType::V_AVX512>::template MType<T>;
+		using r = VIntrospect<VType::V_AVX512>::template RType<T>;
+
+	public:
+		static STL_FORCEINLINE m invoke(r v_Left, r v_Right) noexcept {
+			if constexpr (sizeof(T) == 1 && IsInteger<T>::value) return _mm512_cmpeq_epi8_mask(v_Left, v_Right);
+			else STL_UNREACHABLE();
+		}
+	};
+#endif
+
+	// Canonical extraction of byte sign bits into a scalar/backend mask.
+	template<VType Type, typename T>
+	struct MoveMask final {
+		STL_INVOCABLE(MoveMask)
+
+	public:
+		static STL_FORCEINLINE uint64_t invoke(VIntrospect<Type>::template RType<T> v_Reg) noexcept {
+			STL_UNREACHABLE();
+		}
+	};
+
+#if STL_SSE2_SUPPORT
+	template<typename T>
+	struct MoveMask<VType::V_SSE, T> final {
+		STL_INVOCABLE(MoveMask)
+		using r = VIntrospect<VType::V_SSE>::template RType<T>;
+
+	public:
+		static STL_FORCEINLINE uint64_t invoke(r v_Reg) noexcept {
+			if constexpr (sizeof(T) == 1 && IsInteger<T>::value) return static_cast<uint32_t>(_mm_movemask_epi8(v_Reg));
+			else STL_UNREACHABLE();
+		}
+	};
+#endif
+
+#if STL_AVX2_SUPPORT
+	template<typename T>
+	struct MoveMask<VType::V_AVX, T> final {
+		STL_INVOCABLE(MoveMask)
+		using r = VIntrospect<VType::V_AVX>::template RType<T>;
+
+	public:
+		static STL_FORCEINLINE uint64_t invoke(r v_Reg) noexcept {
+			if constexpr (sizeof(T) == 1 && IsInteger<T>::value) return static_cast<uint32_t>(_mm256_movemask_epi8(v_Reg));
+			else STL_UNREACHABLE();
+		}
+	};
+#endif
+
+	// Canonical software prefetch operations.
+	struct PrefetchRead final {
+		STL_INVOCABLE(PrefetchRead)
+
+	public:
+		static STL_FORCEINLINE void invoke(const void* p_Ptr, int v_Locality) noexcept {
+			_mm_prefetch(reinterpret_cast<const char*>(p_Ptr), v_Locality);
+		}
+	};
+
+	struct PrefetchWrite final {
+		STL_INVOCABLE(PrefetchWrite)
+
+	public:
+		static STL_FORCEINLINE void invoke(const void* p_Ptr) noexcept {
+#if STL_COMPILER_MSVC
+			_m_prefetchw(const_cast<void*>(p_Ptr));
+#else
+			__builtin_prefetch(p_Ptr, 1, 3);
+#endif
+		}
+	};
 
 	// Store-ordering fence for the x86 TSO memory model.
 	template<VType Type = VType::V_UNKNOWN>
