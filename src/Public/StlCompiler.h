@@ -8,7 +8,7 @@
 #define STL_SIMD_AVX512 1
 #elif defined(__AVX2__)
 #define STL_SIMD_AVX2 1
-#elif defined(__SSE2__)
+#elif defined(__SSE2__) || defined(_M_X64) || defined(_M_AMD64) || (defined(_M_IX86_FP) && _M_IX86_FP >= 2)
 #define STL_SIMD_SSE2 1
 #else
 #define STL_SIMD_SCALAR 1

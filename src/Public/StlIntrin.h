@@ -563,8 +563,10 @@ namespace Stl::Internal::V {
 		STL_INVOCABLE(PrefetchRead)
 
 	public:
-		static STL_FORCEINLINE void invoke(const void* p_Ptr, int v_Locality) noexcept {
-			_mm_prefetch(reinterpret_cast<const char*>(p_Ptr), v_Locality);
+		template<int Locality>
+		static STL_FORCEINLINE void invoke(const void* p_Ptr) noexcept {
+			static_assert(Locality >= 0 && Locality <= 3, "Invalid prefetch locality");
+			_mm_prefetch(reinterpret_cast<const char*>(p_Ptr), Locality);
 		}
 	};
 

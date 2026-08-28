@@ -22,10 +22,9 @@
 #define STL_EDITOR_MODE 0
 #endif
 
-#if defined(__SSE__) || defined(__SSE2__) || STL_EDITOR_MODE
+#if defined(__SSE__) || defined(__SSE2__) || defined(_M_X64) || defined(_M_AMD64) || (defined(_M_IX86_FP) && _M_IX86_FP >= 1) || STL_EDITOR_MODE
 #define STL_SSE_SUPPORT 1
-
-#if defined(__SSE2__) || STL_EDITOR_MODE
+#if defined(__SSE2__) || defined(_M_X64) || defined(_M_AMD64) || (defined(_M_IX86_FP) && _M_IX86_FP >= 2) || STL_EDITOR_MODE
 #define STL_SSE2_SUPPORT 1
 #else
 #define STL_SSE2_SUPPORT 0
@@ -76,42 +75,33 @@
 #define STL_AVX512_ACTIVE 0
 #endif
 
-// Set Preferred Backend
-#define STL_PREFERRED_VEC 0
+// Set Preferred Backend. STL_PREFERRED_VEC = support level of the pick
+// (3 AVX-512 / 2 AVX / 1 SSE / 0 none); external -D wins, else widest available.
 
+// STL_*_ACTIVE and its /arch flag are both PRIVATE, so this mismatch check is
+// only meaningful in StormSTL's own TUs (STL_SHARED is PRIVATE too).
+#if defined(STL_SHARED)
 #if STL_AVX512_ACTIVE && !STL_AVX512_SUPPORT
 #error "AVX512 preference but AVX512 is not available"
-#else
-#if STL_PREFERRED_VEC == 0
-#define STL_PREFERRED_VEC STL_AVX512_SUPPORT
 #endif
-#endif
-
 #if STL_AVX_ACTIVE && !STL_AVX_SUPPORT
 #error "AVX preference but AVX is not available"
-#else
-#if STL_PREFERRED_VEC == 0
-#define STL_PREFERRED_VEC STL_AVX_SUPPORT
 #endif
-#endif
-
-
 #if STL_SSE_ACTIVE && !STL_SSE_SUPPORT
 #error "SSE preference but SSE is not available"
-#else
-#if STL_PREFERRED_VEC == 0
-#define STL_PREFERRED_VEC STL_SSE_SUPPORT
 #endif
 #endif
 
-// If no preference 
-
-#if STL_AVX512_SUPPORT && !STL_PREFERRED_VEC
+#ifndef STL_PREFERRED_VEC
+#if STL_AVX512_SUPPORT
 #define STL_PREFERRED_VEC STL_AVX512_SUPPORT
-#elif STL_AVX_SUPPORT && !STL_PREFERRED_VEC
+#elif STL_AVX_SUPPORT
 #define STL_PREFERRED_VEC STL_AVX_SUPPORT
-#elif STL_SSE_SUPPORT && !STL_PREFERRED_VEC
+#elif STL_SSE_SUPPORT
 #define STL_PREFERRED_VEC STL_SSE_SUPPORT
+#else
+#define STL_PREFERRED_VEC 0
+#endif
 #endif
 
 // Unroll windows
@@ -138,6 +128,10 @@
 #else
 #define STL_AVX512_UNROLL_WINDOW STL_UNROLL_WINDOW
 #endif
+#endif
+
+#ifndef STL_NT_JUMP_SIZE
+#define STL_NT_JUMP_SIZE 262144
 #endif
 
 

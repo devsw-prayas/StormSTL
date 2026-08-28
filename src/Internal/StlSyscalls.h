@@ -6,6 +6,11 @@
 #define NOMINMAX
 #include <windows.h>
 
+#if _MSC_VER
+#include <intrin.h>
+#endif
+
+
 #elif defined(__linux__)
 #include <sys/mman.h>
 #include <unistd.h>
@@ -14,7 +19,4 @@
 #include <sched.h>
 #endif
 
-#ifdef CORIUM_CUDA_AVAILABLE
-#include <cuda_runtime.h>
-#endif
 #endif

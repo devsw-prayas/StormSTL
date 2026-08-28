@@ -64,7 +64,8 @@ if(STL_PREFER_SSE)
     if(DEFINED STL_SSE_FLAG)
         target_compile_options(StormSTL PRIVATE "${STL_SSE_FLAG}")
     endif()
-    target_compile_definitions(StormSTL PUBLIC STL_SSE_ACTIVE=1)
+    # PRIVATE to match the /arch flag above; consumers key off their own STL_*_SUPPORT.
+    target_compile_definitions(StormSTL PRIVATE STL_SSE_ACTIVE=1)
 endif()
 
 option(STL_PREFER_AVX "Prefer AVX when operations are vectorized" ON)
@@ -74,17 +75,20 @@ if(STL_PREFER_AVX)
         message(FATAL_ERROR "AVX preference requested, but the compiler does not support ${STL_AVX_FLAG}")
     endif()
     target_compile_options(StormSTL PRIVATE "${STL_AVX_FLAG}")
-    target_compile_definitions(StormSTL PUBLIC STL_AVX_ACTIVE=1)
+    target_compile_definitions(StormSTL PRIVATE STL_AVX_ACTIVE=1)
 endif()
 
-option(STL_PREFER_AVX512 "Prefer AVX512f when operations are vectorized" ON)
+# OFF by default: STL_COMPILER_HAS_AVX512 only means the compiler accepts the flag,
+# not that the target CPU can run AVX-512 - a mismatch is a runtime #UD, not a build
+# error. Opt in explicitly (or via -DSTL_PREFER_AVX512=ON) when you know it can.
+option(STL_PREFER_AVX512 "Prefer AVX512f when operations are vectorized" OFF)
 
 if(STL_PREFER_AVX512)
     if(NOT STL_COMPILER_HAS_AVX512)
         message(FATAL_ERROR "AVX-512 preference requested, but the compiler does not support ${STL_AVX512_FLAG}")
     endif()
     target_compile_options(StormSTL PRIVATE "${STL_AVX512_FLAG}")
-    target_compile_definitions(StormSTL PUBLIC STL_AVX512_ACTIVE=1)
+    target_compile_definitions(StormSTL PRIVATE STL_AVX512_ACTIVE=1)
 endif()
 
 set(STL_DEFAULT_UNROLL_WINDOW_SSE 16 CACHE STRING
@@ -108,6 +112,9 @@ endif()
 set(STL_UNROLL_WINDOW 0 CACHE STRING
     "Global unroll-window override; 0 uses the backend-specific default")
 
+set(STL_NT_JUMP_SIZE 262144 CACHE STRING
+    "Minimum byte size before non-temporal memory operations are considered")
+
 foreach(window
         STL_DEFAULT_UNROLL_WINDOW_SSE
         STL_DEFAULT_UNROLL_WINDOW_AVX
@@ -122,9 +129,14 @@ if(NOT ${STL_UNROLL_WINDOW} MATCHES "^[0-9][0-9]*$")
     message(FATAL_ERROR "STL_UNROLL_WINDOW must be a non-negative integer")
 endif()
 
+if(NOT ${STL_NT_JUMP_SIZE} MATCHES "^[1-9][0-9]*$")
+    message(FATAL_ERROR "STL_NT_JUMP_SIZE must be a positive integer")
+endif()
+
 target_compile_definitions(StormSTL PUBLIC
     STL_DEFAULT_UNROLL_WINDOW_SSE=${STL_DEFAULT_UNROLL_WINDOW_SSE}
     STL_DEFAULT_UNROLL_WINDOW_AVX=${STL_DEFAULT_UNROLL_WINDOW_AVX}
     STL_DEFAULT_UNROLL_WINDOW_AVX512=${STL_DEFAULT_UNROLL_WINDOW_AVX512}
     STL_UNROLL_WINDOW=${STL_UNROLL_WINDOW}
+    STL_NT_JUMP_SIZE=${STL_NT_JUMP_SIZE}
 )

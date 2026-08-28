@@ -29,6 +29,44 @@ namespace Stl::V {
 		V_UNKNOWN = 255
 	};
 
+	constexpr VType preferredBackend() noexcept {
+#if STL_PREFERRED_VEC == 3 && STL_AVX512_SUPPORT
+		return VType::V_AVX512;
+#elif STL_PREFERRED_VEC == 2 && STL_AVX_SUPPORT
+		return VType::V_AVX;
+#elif STL_PREFERRED_VEC == 1 && STL_SSE_SUPPORT
+		return VType::V_SSE;
+#else
+		return VType::V_UNKNOWN;
+	#endif
+	}
+
+	template<VType Type>
+	struct TUnrollResolve final {
+		using resolve = std::integral_constant<size_t, 0>;
+	};
+
+#if STL_SSE_SUPPORT
+	template<>
+	struct TUnrollResolve<VType::V_SSE> final {
+		using resolve = std::integral_constant<size_t, STL_SSE_UNROLL_WINDOW>;
+	};
+#endif
+
+#if STL_AVX_SUPPORT
+	template<>
+	struct TUnrollResolve<VType::V_AVX> final {
+		using resolve = std::integral_constant<size_t, STL_AVX_UNROLL_WINDOW>;
+	};
+#endif
+
+#if STL_AVX512_SUPPORT
+	template<>
+	struct TUnrollResolve<VType::V_AVX512> final {
+		using resolve = std::integral_constant<size_t, STL_AVX512_UNROLL_WINDOW>;
+	};
+#endif
+
 	template<VType Type = VType::V_UNKNOWN, typename T = void>
 	struct TResolve final {
 		using resolve = std::conditional_t<std::is_void_v<T>, void, T>;
@@ -68,6 +106,8 @@ namespace Stl::V {
 
 		template<typename T, size_t MaskWidth = 0>
 		using MType = typename TMaskResolve<Type, T, MaskWidth>::resolve;
+
+		using UType = typename TUnrollResolve<Type>::resolve;
 	};
 
 #if STL_SSE_SUPPORT
@@ -87,6 +127,8 @@ namespace Stl::V {
 
 		template<typename T, size_t MaskWidth = 0>
 		using MType = typename TMaskResolve<VType::V_SSE, T, MaskWidth>::resolve;
+
+		using UType = typename TUnrollResolve<VType::V_SSE>::resolve;
 	};
 #endif
 
@@ -107,6 +149,8 @@ namespace Stl::V {
 
 		template<typename T, size_t MaskWidth = 0>
 		using MType = typename TMaskResolve<VType::V_AVX, T, MaskWidth>::resolve;
+
+		using UType = typename TUnrollResolve<VType::V_AVX>::resolve;
 	};
 #endif
 
@@ -132,6 +176,8 @@ namespace Stl::V {
 
 		template<typename T>
 		using MType = typename TMaskResolve<VType::V_AVX512, T, kWidth / sizeof(T)>::resolve;
+
+		using UType = typename TUnrollResolve<VType::V_AVX512>::resolve;
 	};
 #endif
 }
