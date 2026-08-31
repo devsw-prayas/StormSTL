@@ -1,7 +1,9 @@
+#include "StormSTL.h"
 #include "StlMemOps.h"
 #include "StlCpu.h"
 
 #define ALLOW_SYSCALL
+
 #include "StlSyscalls.h"
 
 namespace Stl::Memory {
@@ -31,8 +33,8 @@ namespace Stl::Memory {
 
 		Internal::Storeu<V::preferredBackend(), uint8_t>::invoke(d, l);
 
-		auto* const s = reinterpret_cast<uint8_t*>((p + mask) & ~mask);
-		auto* const e = reinterpret_cast<uint8_t*>((p + v_Size) & ~mask);
+		auto* const s = std::bit_cast<uint8_t*>((p + mask) & ~mask);
+		auto* const e = std::bit_cast<uint8_t*>((p + v_Size) & ~mask);
 		const bool nt = v_Size > nonTemporalThreshold();
 		for (auto* q = s; q < e; q += W) {
 			if (nt) Internal::Stream<V::preferredBackend(), uint8_t>::invoke(q, l);
@@ -45,20 +47,41 @@ namespace Stl::Memory {
 
 	void memCopy(void* STL_RESTRICT p_Dst, const void* STL_RESTRICT p_Src, size_t v_Size) {
 		using introspect = V::VIntrospect<V::preferredBackend()>;
-		constexpr auto align = introspect::kAlign - 1;
-		const auto vSize = v_Size - (v_Size % (introspect::kWidth * introspect::UType::value));
+		constexpr size_t advance = introspect::kWidth * introspect::UType::value;
+		constexpr uintptr_t align = introspect::kAlign - 1;
 
-		if ((reinterpret_cast<uintptr_t>(p_Dst) & align) != 0 || (reinterpret_cast<uintptr_t>(p_Src) & align) != 0) {
-			Internal::memCopyUnalignedDispatch<V::preferredBackend()>(p_Src, p_Dst, vSize);
-		} else if (vSize < nonTemporalThreshold()) {
-			Internal::memCopyDispatch<V::preferredBackend()>(p_Src, p_Dst, vSize);
+		if (v_Size == 0) return;
+
+		// Sub-window sizes: ERMS
+		if (v_Size < advance) {
+#if STL_COMPILER_MSVC
+			__movsb(static_cast<uint8_t*>(p_Dst), static_cast<const uint8_t*>(p_Src), v_Size);
+#else
+			__builtin_memcpy(p_Dst, p_Src, v_Size);
+#endif
+			return;
+		}
+
+		const size_t bulk = v_Size - (v_Size % advance);
+		const bool unaligned = (reinterpret_cast<uintptr_t>(p_Dst) & align) != 0
+			|| (reinterpret_cast<uintptr_t>(p_Src) & align) != 0;
+
+		if (unaligned) {
+			Internal::memCopyUnalignedDispatch<V::preferredBackend()>(p_Src, p_Dst, bulk);
+		} else if (bulk < nonTemporalThreshold()) {
+			Internal::memCopyDispatch<V::preferredBackend()>(p_Src, p_Dst, bulk);
 		} else {
-			Internal::memCopyStreamDispatch<V::preferredBackend()>(p_Src, p_Dst, vSize);
+			Internal::memCopyStreamDispatch<V::preferredBackend()>(p_Src, p_Dst, bulk);
 			Internal::Fence<V::preferredBackend()>::invoke();
 		}
 
-		for (size_t i = vSize; i < v_Size; ++i)
-			static_cast<uint8_t*>(p_Dst)[i] = static_cast<const uint8_t*>(p_Src)[i];
+		// Tail: one unaligned window at the buffer end. Overlap is idempotent under __restrict.
+		if (bulk != v_Size) {
+			const size_t off = v_Size - advance;
+			Internal::memCopyUnalignedDispatch<V::preferredBackend()>(
+				static_cast<const uint8_t*>(p_Src) + off,
+				static_cast<uint8_t*>(p_Dst) + off, advance);
+		}
 	}
 
 	// TODO: implement.

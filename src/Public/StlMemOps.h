@@ -113,14 +113,7 @@ namespace Stl::Memory {
 			constexpr auto advance = STL_SSE_UNROLL_WINDOW * VIntrospect<VType::V_SSE>::kWidth;
 
 			for (size_t v = 0; v < v_Size; v += advance) { // Outer
-#if STL_COMPILER_MSVC && STL_SSE_UNROLL_WINDOW == 4
-				Store<VType::V_SSE, uint8_t>::invoke(curr, m1);
-				Store<VType::V_SSE, uint8_t>::invoke(curr + 16, m1);
-				Store<VType::V_SSE, uint8_t>::invoke(curr + 32, m1);
-				Store<VType::V_SSE, uint8_t>::invoke(curr + 48, m1);
-#else
-				Unrolled::staticFor<0, STL_SSE_UNROLL_WINDOW>([&](auto idx) { Store<VType::V_SSE, uint8_t>::invoke(curr + idx * 16, m1); });
-#endif
+				Unrolled::staticFor<0, STL_SSE_UNROLL_WINDOW>([curr, m1](auto idx) { Store<VType::V_SSE, uint8_t>::invoke(curr + idx * 16, m1); });
 				curr += advance;
 			}
 		}
@@ -135,14 +128,7 @@ namespace Stl::Memory {
 			constexpr auto advance = STL_AVX_UNROLL_WINDOW * VIntrospect<VType::V_AVX>::kWidth;
 
 			for (size_t v = 0; v < v_Size; v += advance) { // Outer
-#if STL_COMPILER_MSVC && STL_AVX_UNROLL_WINDOW == 4
-				Store<VType::V_AVX, uint8_t>::invoke(curr, m1);
-				Store<VType::V_AVX, uint8_t>::invoke(curr + 32, m1);
-				Store<VType::V_AVX, uint8_t>::invoke(curr + 64, m1);
-				Store<VType::V_AVX, uint8_t>::invoke(curr + 96, m1);
-#else
-				Unrolled::staticFor<0, STL_AVX_UNROLL_WINDOW>([&](auto idx) { Store<VType::V_AVX, uint8_t>::invoke(curr + idx * 32, m1); });
-#endif
+				Unrolled::staticFor<0, STL_AVX_UNROLL_WINDOW>([curr, m1](auto idx) { Store<VType::V_AVX, uint8_t>::invoke(curr + idx * 32, m1); });
 				curr += advance;
 			}
 		}
@@ -157,14 +143,7 @@ namespace Stl::Memory {
 			constexpr auto advance = STL_AVX512_UNROLL_WINDOW * VIntrospect<VType::V_AVX512>::kWidth;
 
 			for (size_t v = 0; v < v_Size; v += advance) { // Outer
-#if STL_COMPILER_MSVC && STL_AVX512_UNROLL_WINDOW == 4
-				Store<VType::V_AVX512, uint8_t>::invoke(curr, m1);
-				Store<VType::V_AVX512, uint8_t>::invoke(curr + 64, m1);
-				Store<VType::V_AVX512, uint8_t>::invoke(curr + 128, m1);
-				Store<VType::V_AVX512, uint8_t>::invoke(curr + 192, m1);
-#else
-				Unrolled::staticFor<0, STL_AVX512_UNROLL_WINDOW>([&](auto idx) { Store<VType::V_AVX512, uint8_t>::invoke(curr + idx * 64, m1); });
-#endif
+				Unrolled::staticFor<0, STL_AVX512_UNROLL_WINDOW>([curr, m1](auto idx) { Store<VType::V_AVX512, uint8_t>::invoke(curr + idx * 64, m1); });
 				curr += advance;
 			}
 		}
@@ -179,14 +158,7 @@ namespace Stl::Memory {
 			constexpr auto advance = STL_SSE_UNROLL_WINDOW * VIntrospect<VType::V_SSE>::kWidth;
 
 			for (size_t v = 0; v < v_Size; v += advance) {
-#if STL_COMPILER_MSVC && STL_SSE_UNROLL_WINDOW == 4
-				Stream<VType::V_SSE, uint8_t>::invoke(curr, m1);
-				Stream<VType::V_SSE, uint8_t>::invoke(curr + 16, m1);
-				Stream<VType::V_SSE, uint8_t>::invoke(curr + 32, m1);
-				Stream<VType::V_SSE, uint8_t>::invoke(curr + 48, m1);
-#else
-				Unrolled::staticFor<0, STL_SSE_UNROLL_WINDOW>([&](auto idx) { Stream<VType::V_SSE, uint8_t>::invoke(curr + idx * 16, m1); });
-#endif
+				Unrolled::staticFor<0, STL_SSE_UNROLL_WINDOW>([curr, m1](auto idx) { Stream<VType::V_SSE, uint8_t>::invoke(curr + idx * 16, m1); });
 				curr += advance;
 			}
 		}
@@ -200,14 +172,7 @@ namespace Stl::Memory {
 			constexpr auto advance = STL_AVX_UNROLL_WINDOW * VIntrospect<VType::V_AVX>::kWidth;
 
 			for (size_t v = 0; v < v_Size; v += advance) {
-#if STL_COMPILER_MSVC && STL_AVX_UNROLL_WINDOW == 4
-				Stream<VType::V_AVX, uint8_t>::invoke(curr, m1);
-				Stream<VType::V_AVX, uint8_t>::invoke(curr + 32, m1);
-				Stream<VType::V_AVX, uint8_t>::invoke(curr + 64, m1);
-				Stream<VType::V_AVX, uint8_t>::invoke(curr + 96, m1);
-#else
-				Unrolled::staticFor<0, STL_AVX_UNROLL_WINDOW>([&](auto idx) { Stream<VType::V_AVX, uint8_t>::invoke(curr + idx * 32, m1); });
-#endif
+				Unrolled::staticFor<0, STL_AVX_UNROLL_WINDOW>([curr, m1](auto idx) { Stream<VType::V_AVX, uint8_t>::invoke(curr + idx * 32, m1); });
 				curr += advance;
 			}
 		}
@@ -221,14 +186,7 @@ namespace Stl::Memory {
 			constexpr auto advance = STL_AVX512_UNROLL_WINDOW * VIntrospect<VType::V_AVX512>::kWidth;
 
 			for (size_t v = 0; v < v_Size; v += advance) {
-#if STL_COMPILER_MSVC && STL_AVX512_UNROLL_WINDOW == 4
-				Stream<VType::V_AVX512, uint8_t>::invoke(curr, m1);
-				Stream<VType::V_AVX512, uint8_t>::invoke(curr + 64, m1);
-				Stream<VType::V_AVX512, uint8_t>::invoke(curr + 128, m1);
-				Stream<VType::V_AVX512, uint8_t>::invoke(curr + 192, m1);
-#else
-				Unrolled::staticFor<0, STL_AVX512_UNROLL_WINDOW>([&](auto idx) { Stream<VType::V_AVX512, uint8_t>::invoke(curr + idx * 64, m1); });
-#endif
+				Unrolled::staticFor<0, STL_AVX512_UNROLL_WINDOW>([curr, m1](auto idx) { Stream<VType::V_AVX512, uint8_t>::invoke(curr + idx * 64, m1); });
 				curr += advance;
 			}
 		}
@@ -242,14 +200,7 @@ namespace Stl::Memory {
 			constexpr auto advance = STL_SSE_UNROLL_WINDOW * VIntrospect<VType::V_SSE>::kWidth;
 
 			for (size_t v = 0; v < v_Size; v += advance) {
-#if STL_COMPILER_MSVC && STL_SSE_UNROLL_WINDOW == 4
-				Store<VType::V_SSE, uint8_t>::invoke(curr, m1);
-				Store<VType::V_SSE, uint8_t>::invoke(curr + 16, m1);
-				Store<VType::V_SSE, uint8_t>::invoke(curr + 32, m1);
-				Store<VType::V_SSE, uint8_t>::invoke(curr + 48, m1);
-#else
-				Unrolled::staticFor<0, STL_SSE_UNROLL_WINDOW>([&](auto idx) { Store<VType::V_SSE, uint8_t>::invoke(curr + idx * 16, m1); });
-#endif
+				Unrolled::staticFor<0, STL_SSE_UNROLL_WINDOW>([curr, m1](auto idx) { Store<VType::V_SSE, uint8_t>::invoke(curr + idx * 16, m1); });
 				curr += advance;
 			}
 		}
@@ -263,14 +214,7 @@ namespace Stl::Memory {
 			constexpr auto advance = STL_AVX_UNROLL_WINDOW * VIntrospect<VType::V_AVX>::kWidth;
 
 			for (size_t v = 0; v < v_Size; v += advance) {
-#if STL_COMPILER_MSVC && STL_AVX_UNROLL_WINDOW == 4
-				Store<VType::V_AVX, uint8_t>::invoke(curr, m1);
-				Store<VType::V_AVX, uint8_t>::invoke(curr + 32, m1);
-				Store<VType::V_AVX, uint8_t>::invoke(curr + 64, m1);
-				Store<VType::V_AVX, uint8_t>::invoke(curr + 96, m1);
-#else
-				Unrolled::staticFor<0, STL_AVX_UNROLL_WINDOW>([&](auto idx) { Store<VType::V_AVX, uint8_t>::invoke(curr + idx * 32, m1); });
-#endif
+				Unrolled::staticFor<0, STL_AVX_UNROLL_WINDOW>([curr, m1](auto idx) { Store<VType::V_AVX, uint8_t>::invoke(curr + idx * 32, m1); });
 				curr += advance;
 			}
 		}
@@ -284,14 +228,7 @@ namespace Stl::Memory {
 			constexpr auto advance = STL_AVX512_UNROLL_WINDOW * VIntrospect<VType::V_AVX512>::kWidth;
 
 			for (size_t v = 0; v < v_Size; v += advance) {
-#if STL_COMPILER_MSVC && STL_AVX512_UNROLL_WINDOW == 4
-				Store<VType::V_AVX512, uint8_t>::invoke(curr, m1);
-				Store<VType::V_AVX512, uint8_t>::invoke(curr + 64, m1);
-				Store<VType::V_AVX512, uint8_t>::invoke(curr + 128, m1);
-				Store<VType::V_AVX512, uint8_t>::invoke(curr + 192, m1);
-#else
-				Unrolled::staticFor<0, STL_AVX512_UNROLL_WINDOW>([&](auto idx) { Store<VType::V_AVX512, uint8_t>::invoke(curr + idx * 64, m1); });
-#endif
+				Unrolled::staticFor<0, STL_AVX512_UNROLL_WINDOW>([curr, m1](auto idx) { Store<VType::V_AVX512, uint8_t>::invoke(curr + idx * 64, m1); });
 				curr += advance;
 			}
 		}
@@ -304,21 +241,10 @@ namespace Stl::Memory {
 			constexpr auto advance = STL_SSE_UNROLL_WINDOW * VIntrospect<VType::V_SSE>::kWidth;
 
 			for (size_t v = 0; v < v_Size; v += advance) {
-#if STL_COMPILER_MSVC && STL_SSE_UNROLL_WINDOW == 4
-				const auto v0 = Load<VType::V_SSE, uint8_t>::invoke(currSrc);
-				const auto v1 = Load<VType::V_SSE, uint8_t>::invoke(currSrc + 16);
-				const auto v2 = Load<VType::V_SSE, uint8_t>::invoke(currSrc + 32);
-				const auto v3 = Load<VType::V_SSE, uint8_t>::invoke(currSrc + 48);
-				Store<VType::V_SSE, uint8_t>::invoke(currDst, v0);
-				Store<VType::V_SSE, uint8_t>::invoke(currDst + 16, v1);
-				Store<VType::V_SSE, uint8_t>::invoke(currDst + 32, v2);
-				Store<VType::V_SSE, uint8_t>::invoke(currDst + 48, v3);
-#else
-				Unrolled::staticFor<0, STL_SSE_UNROLL_WINDOW>([&](auto idx) {
-					const auto v_Reg = Load<VType::V_SSE, uint8_t>::invoke(currSrc + idx * 16);
-					Store<VType::V_SSE, uint8_t>::invoke(currDst + idx * 16, v_Reg);
+				Unrolled::staticFor<0, STL_SSE_UNROLL_WINDOW>([currSrc, currDst](auto idx) {
+					Store<VType::V_SSE, uint8_t>::invoke(currDst + idx * 16,
+						Load<VType::V_SSE, uint8_t>::invoke(currSrc + idx * 16));
 				});
-#endif
 				currSrc += advance;
 				currDst += advance;
 			}
@@ -330,21 +256,10 @@ namespace Stl::Memory {
 			constexpr auto advance = STL_SSE_UNROLL_WINDOW * VIntrospect<VType::V_SSE>::kWidth;
 
 			for (size_t v = 0; v < v_Size; v += advance) {
-#if STL_COMPILER_MSVC && STL_SSE_UNROLL_WINDOW == 4
-				const auto v0 = Loadu<VType::V_SSE, uint8_t>::invoke(currSrc);
-				const auto v1 = Loadu<VType::V_SSE, uint8_t>::invoke(currSrc + 16);
-				const auto v2 = Loadu<VType::V_SSE, uint8_t>::invoke(currSrc + 32);
-				const auto v3 = Loadu<VType::V_SSE, uint8_t>::invoke(currSrc + 48);
-				Storeu<VType::V_SSE, uint8_t>::invoke(currDst, v0);
-				Storeu<VType::V_SSE, uint8_t>::invoke(currDst + 16, v1);
-				Storeu<VType::V_SSE, uint8_t>::invoke(currDst + 32, v2);
-				Storeu<VType::V_SSE, uint8_t>::invoke(currDst + 48, v3);
-#else
-				Unrolled::staticFor<0, STL_SSE_UNROLL_WINDOW>([&](auto idx) {
-					const auto v_Reg = Loadu<VType::V_SSE, uint8_t>::invoke(currSrc + idx * 16);
-					Storeu<VType::V_SSE, uint8_t>::invoke(currDst + idx * 16, v_Reg);
+				Unrolled::staticFor<0, STL_SSE_UNROLL_WINDOW>([currSrc, currDst](auto idx) {
+					Storeu<VType::V_SSE, uint8_t>::invoke(currDst + idx * 16,
+						Loadu<VType::V_SSE, uint8_t>::invoke(currSrc + idx * 16));
 				});
-#endif
 				currSrc += advance;
 				currDst += advance;
 			}
@@ -356,21 +271,10 @@ namespace Stl::Memory {
 			constexpr auto advance = STL_SSE_UNROLL_WINDOW * VIntrospect<VType::V_SSE>::kWidth;
 
 			for (size_t v = 0; v < v_Size; v += advance) {
-#if STL_COMPILER_MSVC && STL_SSE_UNROLL_WINDOW == 4
-				const auto v0 = Load<VType::V_SSE, uint8_t>::invoke(currSrc);
-				const auto v1 = Load<VType::V_SSE, uint8_t>::invoke(currSrc + 16);
-				const auto v2 = Load<VType::V_SSE, uint8_t>::invoke(currSrc + 32);
-				const auto v3 = Load<VType::V_SSE, uint8_t>::invoke(currSrc + 48);
-				Stream<VType::V_SSE, uint8_t>::invoke(currDst, v0);
-				Stream<VType::V_SSE, uint8_t>::invoke(currDst + 16, v1);
-				Stream<VType::V_SSE, uint8_t>::invoke(currDst + 32, v2);
-				Stream<VType::V_SSE, uint8_t>::invoke(currDst + 48, v3);
-#else
-				Unrolled::staticFor<0, STL_SSE_UNROLL_WINDOW>([&](auto idx) {
-					const auto v_Reg = Load<VType::V_SSE, uint8_t>::invoke(currSrc + idx * 16);
-					Stream<VType::V_SSE, uint8_t>::invoke(currDst + idx * 16, v_Reg);
+				Unrolled::staticFor<0, STL_SSE_UNROLL_WINDOW>([currSrc, currDst](auto idx) {
+					Stream<VType::V_SSE, uint8_t>::invoke(currDst + idx * 16,
+						Load<VType::V_SSE, uint8_t>::invoke(currSrc + idx * 16));
 				});
-#endif
 				currSrc += advance;
 				currDst += advance;
 			}
@@ -385,21 +289,10 @@ namespace Stl::Memory {
 			for (size_t v = 0; v < v_Size; v += advance) {
 				currSrc -= advance;
 				currDst -= advance;
-#if STL_COMPILER_MSVC && STL_SSE_UNROLL_WINDOW == 4
-				const auto v0 = Load<VType::V_SSE, uint8_t>::invoke(currSrc);
-				const auto v1 = Load<VType::V_SSE, uint8_t>::invoke(currSrc + 16);
-				const auto v2 = Load<VType::V_SSE, uint8_t>::invoke(currSrc + 32);
-				const auto v3 = Load<VType::V_SSE, uint8_t>::invoke(currSrc + 48);
-				Store<VType::V_SSE, uint8_t>::invoke(currDst, v0);
-				Store<VType::V_SSE, uint8_t>::invoke(currDst + 16, v1);
-				Store<VType::V_SSE, uint8_t>::invoke(currDst + 32, v2);
-				Store<VType::V_SSE, uint8_t>::invoke(currDst + 48, v3);
-#else
-				Unrolled::staticFor<0, STL_SSE_UNROLL_WINDOW>([&](auto idx) {
-					const auto v_Reg = Load<VType::V_SSE, uint8_t>::invoke(currSrc + idx * 16);
-					Store<VType::V_SSE, uint8_t>::invoke(currDst + idx * 16, v_Reg);
+				Unrolled::staticFor<0, STL_SSE_UNROLL_WINDOW>([currSrc, currDst](auto idx) {
+					Store<VType::V_SSE, uint8_t>::invoke(currDst + idx * 16,
+						Load<VType::V_SSE, uint8_t>::invoke(currSrc + idx * 16));
 				});
-#endif
 			}
 		}
 
@@ -412,47 +305,30 @@ namespace Stl::Memory {
 			for (size_t v = 0; v < v_Size; v += advance) {
 				currSrc -= advance;
 				currDst -= advance;
-#if STL_COMPILER_MSVC && STL_SSE_UNROLL_WINDOW == 4
-				const auto v0 = Load<VType::V_SSE, uint8_t>::invoke(currSrc);
-				const auto v1 = Load<VType::V_SSE, uint8_t>::invoke(currSrc + 16);
-				const auto v2 = Load<VType::V_SSE, uint8_t>::invoke(currSrc + 32);
-				const auto v3 = Load<VType::V_SSE, uint8_t>::invoke(currSrc + 48);
-				Stream<VType::V_SSE, uint8_t>::invoke(currDst, v0);
-				Stream<VType::V_SSE, uint8_t>::invoke(currDst + 16, v1);
-				Stream<VType::V_SSE, uint8_t>::invoke(currDst + 32, v2);
-				Stream<VType::V_SSE, uint8_t>::invoke(currDst + 48, v3);
-#else
-				Unrolled::staticFor<0, STL_SSE_UNROLL_WINDOW>([&](auto idx) {
-					const auto v_Reg = Load<VType::V_SSE, uint8_t>::invoke(currSrc + idx * 16);
-					Stream<VType::V_SSE, uint8_t>::invoke(currDst + idx * 16, v_Reg);
+				Unrolled::staticFor<0, STL_SSE_UNROLL_WINDOW>([currSrc, currDst](auto idx) {
+					Stream<VType::V_SSE, uint8_t>::invoke(currDst + idx * 16,
+						Load<VType::V_SSE, uint8_t>::invoke(currSrc + idx * 16));
 				});
-#endif
 			}
 		}
 #endif
 
 #if STL_AVX_SUPPORT
+		// One shape for every compiler: the staticFor unroller, unrolled to
+		// STL_AVX_UNROLL_WINDOW (CMake-configured). MSVC and Clang both flatten it
+		// into a single straight-line copy loop. Capture is by value so the
+		// non-inlined template instantiation reads the pointer values directly
+		// instead of chasing them through an [&] closure.
 		void STL_FORCEINLINE copyMemoryAVX(const void* STL_RESTRICT p_Src, void* STL_RESTRICT p_Dst, size_t v_Size) {
 			auto currSrc = static_cast<const unsigned char*>(p_Src);
 			auto currDst = static_cast<unsigned char*>(p_Dst);
 			constexpr auto advance = STL_AVX_UNROLL_WINDOW * VIntrospect<VType::V_AVX>::kWidth;
 
 			for (size_t v = 0; v < v_Size; v += advance) {
-#if STL_COMPILER_MSVC && STL_AVX_UNROLL_WINDOW == 4
-				const auto v0 = Load<VType::V_AVX, uint8_t>::invoke(currSrc);
-				const auto v1 = Load<VType::V_AVX, uint8_t>::invoke(currSrc + 32);
-				const auto v2 = Load<VType::V_AVX, uint8_t>::invoke(currSrc + 64);
-				const auto v3 = Load<VType::V_AVX, uint8_t>::invoke(currSrc + 96);
-				Store<VType::V_AVX, uint8_t>::invoke(currDst, v0);
-				Store<VType::V_AVX, uint8_t>::invoke(currDst + 32, v1);
-				Store<VType::V_AVX, uint8_t>::invoke(currDst + 64, v2);
-				Store<VType::V_AVX, uint8_t>::invoke(currDst + 96, v3);
-#else
-				Unrolled::staticFor<0, STL_AVX_UNROLL_WINDOW>([&](auto idx) {
-					const auto v_Reg = Load<VType::V_AVX, uint8_t>::invoke(currSrc + idx * 32);
-					Store<VType::V_AVX, uint8_t>::invoke(currDst + idx * 32, v_Reg);
+				Unrolled::staticFor<0, STL_AVX_UNROLL_WINDOW>([currSrc, currDst](auto idx) {
+					Store<VType::V_AVX, uint8_t>::invoke(currDst + idx * 32,
+						Load<VType::V_AVX, uint8_t>::invoke(currSrc + idx * 32));
 				});
-#endif
 				currSrc += advance;
 				currDst += advance;
 			}
@@ -464,21 +340,10 @@ namespace Stl::Memory {
 			constexpr auto advance = STL_AVX_UNROLL_WINDOW * VIntrospect<VType::V_AVX>::kWidth;
 
 			for (size_t v = 0; v < v_Size; v += advance) {
-#if STL_COMPILER_MSVC && STL_AVX_UNROLL_WINDOW == 4
-				const auto v0 = Loadu<VType::V_AVX, uint8_t>::invoke(currSrc);
-				const auto v1 = Loadu<VType::V_AVX, uint8_t>::invoke(currSrc + 32);
-				const auto v2 = Loadu<VType::V_AVX, uint8_t>::invoke(currSrc + 64);
-				const auto v3 = Loadu<VType::V_AVX, uint8_t>::invoke(currSrc + 96);
-				Storeu<VType::V_AVX, uint8_t>::invoke(currDst, v0);
-				Storeu<VType::V_AVX, uint8_t>::invoke(currDst + 32, v1);
-				Storeu<VType::V_AVX, uint8_t>::invoke(currDst + 64, v2);
-				Storeu<VType::V_AVX, uint8_t>::invoke(currDst + 96, v3);
-#else
-				Unrolled::staticFor<0, STL_AVX_UNROLL_WINDOW>([&](auto idx) {
-					const auto v_Reg = Loadu<VType::V_AVX, uint8_t>::invoke(currSrc + idx * 32);
-					Storeu<VType::V_AVX, uint8_t>::invoke(currDst + idx * 32, v_Reg);
+				Unrolled::staticFor<0, STL_AVX_UNROLL_WINDOW>([currSrc, currDst](auto idx) {
+					Storeu<VType::V_AVX, uint8_t>::invoke(currDst + idx * 32,
+						Loadu<VType::V_AVX, uint8_t>::invoke(currSrc + idx * 32));
 				});
-#endif
 				currSrc += advance;
 				currDst += advance;
 			}
@@ -490,21 +355,10 @@ namespace Stl::Memory {
 			constexpr auto advance = STL_AVX_UNROLL_WINDOW * VIntrospect<VType::V_AVX>::kWidth;
 
 			for (size_t v = 0; v < v_Size; v += advance) {
-#if STL_COMPILER_MSVC && STL_AVX_UNROLL_WINDOW == 4
-				const auto v0 = Load<VType::V_AVX, uint8_t>::invoke(currSrc);
-				const auto v1 = Load<VType::V_AVX, uint8_t>::invoke(currSrc + 32);
-				const auto v2 = Load<VType::V_AVX, uint8_t>::invoke(currSrc + 64);
-				const auto v3 = Load<VType::V_AVX, uint8_t>::invoke(currSrc + 96);
-				Stream<VType::V_AVX, uint8_t>::invoke(currDst, v0);
-				Stream<VType::V_AVX, uint8_t>::invoke(currDst + 32, v1);
-				Stream<VType::V_AVX, uint8_t>::invoke(currDst + 64, v2);
-				Stream<VType::V_AVX, uint8_t>::invoke(currDst + 96, v3);
-#else
-				Unrolled::staticFor<0, STL_AVX_UNROLL_WINDOW>([&](auto idx) {
-					const auto v_Reg = Load<VType::V_AVX, uint8_t>::invoke(currSrc + idx * 32);
-					Stream<VType::V_AVX, uint8_t>::invoke(currDst + idx * 32, v_Reg);
+				Unrolled::staticFor<0, STL_AVX_UNROLL_WINDOW>([currSrc, currDst](auto idx) {
+					Stream<VType::V_AVX, uint8_t>::invoke(currDst + idx * 32,
+						Load<VType::V_AVX, uint8_t>::invoke(currSrc + idx * 32));
 				});
-#endif
 				currSrc += advance;
 				currDst += advance;
 			}
@@ -519,21 +373,10 @@ namespace Stl::Memory {
 			for (size_t v = 0; v < v_Size; v += advance) {
 				currSrc -= advance;
 				currDst -= advance;
-#if STL_COMPILER_MSVC && STL_AVX_UNROLL_WINDOW == 4
-				const auto v0 = Load<VType::V_AVX, uint8_t>::invoke(currSrc);
-				const auto v1 = Load<VType::V_AVX, uint8_t>::invoke(currSrc + 32);
-				const auto v2 = Load<VType::V_AVX, uint8_t>::invoke(currSrc + 64);
-				const auto v3 = Load<VType::V_AVX, uint8_t>::invoke(currSrc + 96);
-				Store<VType::V_AVX, uint8_t>::invoke(currDst, v0);
-				Store<VType::V_AVX, uint8_t>::invoke(currDst + 32, v1);
-				Store<VType::V_AVX, uint8_t>::invoke(currDst + 64, v2);
-				Store<VType::V_AVX, uint8_t>::invoke(currDst + 96, v3);
-#else
-				Unrolled::staticFor<0, STL_AVX_UNROLL_WINDOW>([&](auto idx) {
-					const auto v_Reg = Load<VType::V_AVX, uint8_t>::invoke(currSrc + idx * 32);
-					Store<VType::V_AVX, uint8_t>::invoke(currDst + idx * 32, v_Reg);
+				Unrolled::staticFor<0, STL_AVX_UNROLL_WINDOW>([currSrc, currDst](auto idx) {
+					Store<VType::V_AVX, uint8_t>::invoke(currDst + idx * 32,
+						Load<VType::V_AVX, uint8_t>::invoke(currSrc + idx * 32));
 				});
-#endif
 			}
 		}
 
@@ -546,21 +389,10 @@ namespace Stl::Memory {
 			for (size_t v = 0; v < v_Size; v += advance) {
 				currSrc -= advance;
 				currDst -= advance;
-#if STL_COMPILER_MSVC && STL_AVX_UNROLL_WINDOW == 4
-				const auto v0 = Load<VType::V_AVX, uint8_t>::invoke(currSrc);
-				const auto v1 = Load<VType::V_AVX, uint8_t>::invoke(currSrc + 32);
-				const auto v2 = Load<VType::V_AVX, uint8_t>::invoke(currSrc + 64);
-				const auto v3 = Load<VType::V_AVX, uint8_t>::invoke(currSrc + 96);
-				Stream<VType::V_AVX, uint8_t>::invoke(currDst, v0);
-				Stream<VType::V_AVX, uint8_t>::invoke(currDst + 32, v1);
-				Stream<VType::V_AVX, uint8_t>::invoke(currDst + 64, v2);
-				Stream<VType::V_AVX, uint8_t>::invoke(currDst + 96, v3);
-#else
-				Unrolled::staticFor<0, STL_AVX_UNROLL_WINDOW>([&](auto idx) {
-					const auto v_Reg = Load<VType::V_AVX, uint8_t>::invoke(currSrc + idx * 32);
-					Stream<VType::V_AVX, uint8_t>::invoke(currDst + idx * 32, v_Reg);
+				Unrolled::staticFor<0, STL_AVX_UNROLL_WINDOW>([currSrc, currDst](auto idx) {
+					Stream<VType::V_AVX, uint8_t>::invoke(currDst + idx * 32,
+						Load<VType::V_AVX, uint8_t>::invoke(currSrc + idx * 32));
 				});
-#endif
 			}
 		}
 #endif
@@ -572,21 +404,10 @@ namespace Stl::Memory {
 			constexpr auto advance = STL_AVX512_UNROLL_WINDOW * VIntrospect<VType::V_AVX512>::kWidth;
 
 			for (size_t v = 0; v < v_Size; v += advance) {
-#if STL_COMPILER_MSVC && STL_AVX512_UNROLL_WINDOW == 4
-				const auto v0 = Load<VType::V_AVX512, uint8_t>::invoke(currSrc);
-				const auto v1 = Load<VType::V_AVX512, uint8_t>::invoke(currSrc + 64);
-				const auto v2 = Load<VType::V_AVX512, uint8_t>::invoke(currSrc + 128);
-				const auto v3 = Load<VType::V_AVX512, uint8_t>::invoke(currSrc + 192);
-				Store<VType::V_AVX512, uint8_t>::invoke(currDst, v0);
-				Store<VType::V_AVX512, uint8_t>::invoke(currDst + 64, v1);
-				Store<VType::V_AVX512, uint8_t>::invoke(currDst + 128, v2);
-				Store<VType::V_AVX512, uint8_t>::invoke(currDst + 192, v3);
-#else
-				Unrolled::staticFor<0, STL_AVX512_UNROLL_WINDOW>([&](auto idx) {
-					const auto v_Reg = Load<VType::V_AVX512, uint8_t>::invoke(currSrc + idx * 64);
-					Store<VType::V_AVX512, uint8_t>::invoke(currDst + idx * 64, v_Reg);
+				Unrolled::staticFor<0, STL_AVX512_UNROLL_WINDOW>([currSrc, currDst](auto idx) {
+					Store<VType::V_AVX512, uint8_t>::invoke(currDst + idx * 64,
+						Load<VType::V_AVX512, uint8_t>::invoke(currSrc + idx * 64));
 				});
-#endif
 				currSrc += advance;
 				currDst += advance;
 			}
@@ -598,21 +419,10 @@ namespace Stl::Memory {
 			constexpr auto advance = STL_AVX512_UNROLL_WINDOW * VIntrospect<VType::V_AVX512>::kWidth;
 
 			for (size_t v = 0; v < v_Size; v += advance) {
-#if STL_COMPILER_MSVC && STL_AVX512_UNROLL_WINDOW == 4
-				const auto v0 = Loadu<VType::V_AVX512, uint8_t>::invoke(currSrc);
-				const auto v1 = Loadu<VType::V_AVX512, uint8_t>::invoke(currSrc + 64);
-				const auto v2 = Loadu<VType::V_AVX512, uint8_t>::invoke(currSrc + 128);
-				const auto v3 = Loadu<VType::V_AVX512, uint8_t>::invoke(currSrc + 192);
-				Storeu<VType::V_AVX512, uint8_t>::invoke(currDst, v0);
-				Storeu<VType::V_AVX512, uint8_t>::invoke(currDst + 64, v1);
-				Storeu<VType::V_AVX512, uint8_t>::invoke(currDst + 128, v2);
-				Storeu<VType::V_AVX512, uint8_t>::invoke(currDst + 192, v3);
-#else
-				Unrolled::staticFor<0, STL_AVX512_UNROLL_WINDOW>([&](auto idx) {
-					const auto v_Reg = Loadu<VType::V_AVX512, uint8_t>::invoke(currSrc + idx * 64);
-					Storeu<VType::V_AVX512, uint8_t>::invoke(currDst + idx * 64, v_Reg);
+				Unrolled::staticFor<0, STL_AVX512_UNROLL_WINDOW>([currSrc, currDst](auto idx) {
+					Storeu<VType::V_AVX512, uint8_t>::invoke(currDst + idx * 64,
+						Loadu<VType::V_AVX512, uint8_t>::invoke(currSrc + idx * 64));
 				});
-#endif
 				currSrc += advance;
 				currDst += advance;
 			}
@@ -624,21 +434,10 @@ namespace Stl::Memory {
 			constexpr auto advance = STL_AVX512_UNROLL_WINDOW * VIntrospect<VType::V_AVX512>::kWidth;
 
 			for (size_t v = 0; v < v_Size; v += advance) {
-#if STL_COMPILER_MSVC && STL_AVX512_UNROLL_WINDOW == 4
-				const auto v0 = Load<VType::V_AVX512, uint8_t>::invoke(currSrc);
-				const auto v1 = Load<VType::V_AVX512, uint8_t>::invoke(currSrc + 64);
-				const auto v2 = Load<VType::V_AVX512, uint8_t>::invoke(currSrc + 128);
-				const auto v3 = Load<VType::V_AVX512, uint8_t>::invoke(currSrc + 192);
-				Stream<VType::V_AVX512, uint8_t>::invoke(currDst, v0);
-				Stream<VType::V_AVX512, uint8_t>::invoke(currDst + 64, v1);
-				Stream<VType::V_AVX512, uint8_t>::invoke(currDst + 128, v2);
-				Stream<VType::V_AVX512, uint8_t>::invoke(currDst + 192, v3);
-#else
-				Unrolled::staticFor<0, STL_AVX512_UNROLL_WINDOW>([&](auto idx) {
-					const auto v_Reg = Load<VType::V_AVX512, uint8_t>::invoke(currSrc + idx * 64);
-					Stream<VType::V_AVX512, uint8_t>::invoke(currDst + idx * 64, v_Reg);
+				Unrolled::staticFor<0, STL_AVX512_UNROLL_WINDOW>([currSrc, currDst](auto idx) {
+					Stream<VType::V_AVX512, uint8_t>::invoke(currDst + idx * 64,
+						Load<VType::V_AVX512, uint8_t>::invoke(currSrc + idx * 64));
 				});
-#endif
 				currSrc += advance;
 				currDst += advance;
 			}
@@ -653,21 +452,10 @@ namespace Stl::Memory {
 			for (size_t v = 0; v < v_Size; v += advance) {
 				currSrc -= advance;
 				currDst -= advance;
-#if STL_COMPILER_MSVC && STL_AVX512_UNROLL_WINDOW == 4
-				const auto v0 = Load<VType::V_AVX512, uint8_t>::invoke(currSrc);
-				const auto v1 = Load<VType::V_AVX512, uint8_t>::invoke(currSrc + 64);
-				const auto v2 = Load<VType::V_AVX512, uint8_t>::invoke(currSrc + 128);
-				const auto v3 = Load<VType::V_AVX512, uint8_t>::invoke(currSrc + 192);
-				Store<VType::V_AVX512, uint8_t>::invoke(currDst, v0);
-				Store<VType::V_AVX512, uint8_t>::invoke(currDst + 64, v1);
-				Store<VType::V_AVX512, uint8_t>::invoke(currDst + 128, v2);
-				Store<VType::V_AVX512, uint8_t>::invoke(currDst + 192, v3);
-#else
-				Unrolled::staticFor<0, STL_AVX512_UNROLL_WINDOW>([&](auto idx) {
-					const auto v_Reg = Load<VType::V_AVX512, uint8_t>::invoke(currSrc + idx * 64);
-					Store<VType::V_AVX512, uint8_t>::invoke(currDst + idx * 64, v_Reg);
+				Unrolled::staticFor<0, STL_AVX512_UNROLL_WINDOW>([currSrc, currDst](auto idx) {
+					Store<VType::V_AVX512, uint8_t>::invoke(currDst + idx * 64,
+						Load<VType::V_AVX512, uint8_t>::invoke(currSrc + idx * 64));
 				});
-#endif
 			}
 		}
 
@@ -680,21 +468,10 @@ namespace Stl::Memory {
 			for (size_t v = 0; v < v_Size; v += advance) {
 				currSrc -= advance;
 				currDst -= advance;
-#if STL_COMPILER_MSVC && STL_AVX512_UNROLL_WINDOW == 4
-				const auto v0 = Load<VType::V_AVX512, uint8_t>::invoke(currSrc);
-				const auto v1 = Load<VType::V_AVX512, uint8_t>::invoke(currSrc + 64);
-				const auto v2 = Load<VType::V_AVX512, uint8_t>::invoke(currSrc + 128);
-				const auto v3 = Load<VType::V_AVX512, uint8_t>::invoke(currSrc + 192);
-				Stream<VType::V_AVX512, uint8_t>::invoke(currDst, v0);
-				Stream<VType::V_AVX512, uint8_t>::invoke(currDst + 64, v1);
-				Stream<VType::V_AVX512, uint8_t>::invoke(currDst + 128, v2);
-				Stream<VType::V_AVX512, uint8_t>::invoke(currDst + 192, v3);
-#else
-				Unrolled::staticFor<0, STL_AVX512_UNROLL_WINDOW>([&](auto idx) {
-					const auto v_Reg = Load<VType::V_AVX512, uint8_t>::invoke(currSrc + idx * 64);
-					Stream<VType::V_AVX512, uint8_t>::invoke(currDst + idx * 64, v_Reg);
+				Unrolled::staticFor<0, STL_AVX512_UNROLL_WINDOW>([currSrc, currDst](auto idx) {
+					Stream<VType::V_AVX512, uint8_t>::invoke(currDst + idx * 64,
+						Load<VType::V_AVX512, uint8_t>::invoke(currSrc + idx * 64));
 				});
-#endif
 			}
 		}
 #endif
