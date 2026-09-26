@@ -37,12 +37,14 @@ target_compile_options(StormSTL PRIVATE
 )
 
 if(MSVC)
-    set(STL_AVX_FLAG "/arch:AVX")
+    # AVX2, not AVX1: the byte-compare / movemask scanners (memEqual/memCompare/
+    # memFindByte) need vpcmpeqb+vpmovmskb on 256-bit integers, which is AVX2.
+    set(STL_AVX_FLAG "/arch:AVX2")
     set(STL_AVX512_FLAG "/arch:AVX512")
 else()
     set(STL_SSE_FLAG "-msse2")
-    set(STL_AVX_FLAG "-mavx")
-    set(STL_AVX512_FLAG "-mavx512f")
+    set(STL_AVX_FLAG "-mavx2")
+    set(STL_AVX512_FLAG "-mavx512f -mavx512bw")
 endif()
 
 if(DEFINED STL_SSE_FLAG)

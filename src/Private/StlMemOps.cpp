@@ -18,7 +18,7 @@ namespace Stl::Memory {
 
 		if (v_Size == 0) return;
 
-		if (v_Size < W || v_Size <= stosThreshold()) {
+		if (v_Size < W || v_Size <= nonTemporalThreshold()) {
 #if STL_COMPILER_MSVC
 			__stosb(static_cast<uint8_t*>(p_Dst), v_Val, v_Size);
 #else
@@ -35,68 +35,101 @@ namespace Stl::Memory {
 
 		auto* const s = std::bit_cast<uint8_t*>((p + mask) & ~mask);
 		auto* const e = std::bit_cast<uint8_t*>((p + v_Size) & ~mask);
-		const bool nt = v_Size > nonTemporalThreshold();
-		for (auto* q = s; q < e; q += W) {
-			if (nt) Internal::Stream<V::preferredBackend(), uint8_t>::invoke(q, l);
-			else Internal::Store<V::preferredBackend(), uint8_t>::invoke(q, l);
-		}
-		if (nt) Internal::Fence<V::preferredBackend()>::invoke();
+
+		Internal::streamWindowLoop<V::preferredBackend()>(s, static_cast<size_t>(e - s), l);
+		Internal::Fence<V::preferredBackend()>::invoke();
 
 		Internal::Storeu<V::preferredBackend(), uint8_t>::invoke(d + v_Size - W, l);
 	}
 
 	void memCopy(void* STL_RESTRICT p_Dst, const void* STL_RESTRICT p_Src, size_t v_Size) {
-		using introspect = V::VIntrospect<V::preferredBackend()>;
+		constexpr auto backend = V::preferredBackend();
+		using introspect = V::VIntrospect<backend>;
 		constexpr size_t advance = introspect::kWidth * introspect::UType::value;
 		constexpr uintptr_t align = introspect::kAlign - 1;
 
 		if (v_Size == 0) return;
 
-		// Sub-window sizes: ERMS
-		if (v_Size < advance) {
+		auto* const dst = static_cast<uint8_t*>(p_Dst);
+		const auto* const src = static_cast<const uint8_t*>(p_Src);
+
+		// A copy touches src + dst, so its cache footprint is twice the payload.
+		if (v_Size < advance || 2 * v_Size <= nonTemporalThreshold()) {
 #if STL_COMPILER_MSVC
-			__movsb(static_cast<uint8_t*>(p_Dst), static_cast<const uint8_t*>(p_Src), v_Size);
+			__movsb(dst, src, v_Size);
 #else
-			__builtin_memcpy(p_Dst, p_Src, v_Size);
+			__builtin_memcpy(dst, src, v_Size);
 #endif
 			return;
 		}
 
-		const size_t bulk = v_Size - (v_Size % advance);
-		const bool unaligned = (reinterpret_cast<uintptr_t>(p_Dst) & align) != 0
-			|| (reinterpret_cast<uintptr_t>(p_Src) & align) != 0;
+		const uintptr_t d = reinterpret_cast<uintptr_t>(dst);
+		const uintptr_t s = reinterpret_cast<uintptr_t>(src);
 
-		if (unaligned) {
-			Internal::memCopyUnalignedDispatch<V::preferredBackend()>(p_Src, p_Dst, bulk);
-		} else if (bulk < nonTemporalThreshold()) {
-			Internal::memCopyDispatch<V::preferredBackend()>(p_Src, p_Dst, bulk);
-		} else {
-			Internal::memCopyStreamDispatch<V::preferredBackend()>(p_Src, p_Dst, bulk);
-			Internal::Fence<V::preferredBackend()>::invoke();
+		size_t done;
+		if (((d | s) & align) == 0) {
+			done = v_Size - (v_Size % advance);
+			Internal::memCopyStreamDispatch<backend>(src, dst, done);
 		}
+		else {
+			// NT stores need an aligned dst; src offset may differ, so it rides along under Loadu.
+			Internal::memCopyUnalignedDispatch<backend>(src, dst, advance);
 
-		// Tail: one unaligned window at the buffer end. Overlap is idempotent under __restrict.
-		if (bulk != v_Size) {
+			const size_t skip = (align + 1 - (d & align)) & align;
+			const size_t rem = v_Size - skip;
+			done = skip + rem - (rem % advance);
+			Internal::memCopyStreamSrcUnalignedDispatch<backend>(src + skip, dst + skip, done - skip);
+		}
+		Internal::Fence<backend>::invoke();
+
+		if (done != v_Size) {
 			const size_t off = v_Size - advance;
-			Internal::memCopyUnalignedDispatch<V::preferredBackend()>(
-				static_cast<const uint8_t*>(p_Src) + off,
-				static_cast<uint8_t*>(p_Dst) + off, advance);
+			Internal::memCopyUnalignedDispatch<backend>(src + off, dst + off, advance);
 		}
 	}
 
 	// TODO: implement.
-	void memMove(void*, const void*, size_t) {}
-	bool memEqual(const void* STL_RESTRICT, const void* STL_RESTRICT, size_t) {
-		return false;
+	void memMove(void*, const void*, size_t) {
+
 	}
-	int memCompare(const void* STL_RESTRICT, const void* STL_RESTRICT, size_t) {
-		return 0;
+
+	bool memEqual(const void* STL_RESTRICT p_Left, const void* STL_RESTRICT p_Right, size_t v_Size) {
+		constexpr size_t width = V::VIntrospect<V::preferredBackend()>::kWidth;
+		if (v_Size < width) {
+			const auto* a = static_cast<const uint8_t*>(p_Left);
+			const auto* b = static_cast<const uint8_t*>(p_Right);
+			for (size_t i = 0; i < v_Size; ++i)
+				if (a[i] != b[i]) return false;
+			return true;
+		}
+		return Internal::memEqual<V::preferredBackend()>(p_Left, p_Right, v_Size);
 	}
-	void* memFindByte(void* STL_RESTRICT, size_t, uint8_t) {
-		return nullptr;
+
+	int memCompare(const void* STL_RESTRICT p_Left, const void* STL_RESTRICT p_Right, size_t v_Size) {
+		constexpr size_t width = V::VIntrospect<V::preferredBackend()>::kWidth;
+		if (v_Size < width) {
+			const auto* a = static_cast<const uint8_t*>(p_Left);
+			const auto* b = static_cast<const uint8_t*>(p_Right);
+			for (size_t i = 0; i < v_Size; ++i)
+				if (a[i] != b[i]) return a[i] < b[i] ? -1 : 1;
+			return 0;
+		}
+		return Internal::memCompare<V::preferredBackend()>(p_Left, p_Right, v_Size);
 	}
-	const void* memFindByte(const void* STL_RESTRICT, size_t, uint8_t) {
-		return nullptr;
+
+	const void* memFindByte(const void* STL_RESTRICT p_Ptr, size_t v_Size, uint8_t v_Byte) {
+		constexpr size_t width = V::VIntrospect<V::preferredBackend()>::kWidth;
+		if (v_Size < width) {
+			const auto* p = static_cast<const uint8_t*>(p_Ptr);
+			for (size_t i = 0; i < v_Size; ++i)
+				if (p[i] == v_Byte) return p + i;
+			return nullptr;
+		}
+		return Internal::memFindByte<V::preferredBackend()>(p_Ptr, v_Size, v_Byte);
+	}
+
+	void* memFindByte(void* STL_RESTRICT p_Ptr, size_t v_Size, uint8_t v_Byte) {
+		return const_cast<void*>(memFindByte(static_cast<const void*>(p_Ptr), v_Size, v_Byte));
 	}
 
 	void prefetchRead(const void* STL_RESTRICT p_Ptr, int v_Locality) {
