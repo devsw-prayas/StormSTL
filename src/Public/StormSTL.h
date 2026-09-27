@@ -30,9 +30,17 @@
 #define STL_SSE2_SUPPORT 0
 #endif
 
+// MSVC never defines __SSE4_1__; /arch:AVX and above imply it.
+#if defined(__SSE4_1__) || defined(__AVX__) || STL_EDITOR_MODE
+#define STL_SSE41_SUPPORT 1
+#else
+#define STL_SSE41_SUPPORT 0
+#endif
+
 #else
 #define STL_SSE_SUPPORT 0
 #define STL_SSE2_SUPPORT 0
+#define STL_SSE41_SUPPORT 0
 #endif
 
 #if defined(__AVX__) || defined(__AVX2__) || STL_EDITOR_MODE

@@ -558,6 +558,132 @@ namespace Stl::Internal::V {
 	};
 #endif
 
+	// Canonical bitwise OR / XOR of two registers.
+	template<VType Type>
+	struct BitOr final {
+		STL_INVOCABLE(BitOr)
+
+	public:
+		static STL_FORCEINLINE auto invoke(VIntrospect<Type>::template RType<uint8_t> v_Left, VIntrospect<Type>::template RType<uint8_t> v_Right) noexcept {
+			STL_UNREACHABLE();
+		}
+	};
+
+	template<VType Type>
+	struct BitXor final {
+		STL_INVOCABLE(BitXor)
+
+	public:
+		static STL_FORCEINLINE auto invoke(VIntrospect<Type>::template RType<uint8_t> v_Left, VIntrospect<Type>::template RType<uint8_t> v_Right) noexcept {
+			STL_UNREACHABLE();
+		}
+	};
+
+	// True if every bit of the register is zero.
+	template<VType Type>
+	struct TestZero final {
+		STL_INVOCABLE(TestZero)
+
+	public:
+		static STL_FORCEINLINE bool invoke(VIntrospect<Type>::template RType<uint8_t> v_Reg) noexcept {
+			STL_UNREACHABLE();
+		}
+	};
+
+#if STL_SSE2_SUPPORT
+	template<>
+	struct BitOr<VType::V_SSE> final {
+		STL_INVOCABLE(BitOr)
+		using r = VIntrospect<VType::V_SSE>::template RType<uint8_t>;
+
+	public:
+		static STL_FORCEINLINE r invoke(r v_Left, r v_Right) noexcept { return _mm_or_si128(v_Left, v_Right); }
+	};
+
+	template<>
+	struct BitXor<VType::V_SSE> final {
+		STL_INVOCABLE(BitXor)
+		using r = VIntrospect<VType::V_SSE>::template RType<uint8_t>;
+
+	public:
+		static STL_FORCEINLINE r invoke(r v_Left, r v_Right) noexcept { return _mm_xor_si128(v_Left, v_Right); }
+	};
+
+	// Pre-SSE4.1 has no ptest, so it falls back to cmpeq + movemask.
+	template<>
+	struct TestZero<VType::V_SSE> final {
+		STL_INVOCABLE(TestZero)
+		using r = VIntrospect<VType::V_SSE>::template RType<uint8_t>;
+
+	public:
+		static STL_FORCEINLINE bool invoke(r v_Reg) noexcept {
+#if STL_SSE41_SUPPORT
+			return _mm_testz_si128(v_Reg, v_Reg) != 0;
+#else
+			return _mm_movemask_epi8(_mm_cmpeq_epi8(v_Reg, _mm_setzero_si128())) == 0xFFFF;
+#endif
+		}
+	};
+#endif
+
+#if STL_AVX2_SUPPORT
+	template<>
+	struct BitOr<VType::V_AVX> final {
+		STL_INVOCABLE(BitOr)
+		using r = VIntrospect<VType::V_AVX>::template RType<uint8_t>;
+
+	public:
+		static STL_FORCEINLINE r invoke(r v_Left, r v_Right) noexcept { return _mm256_or_si256(v_Left, v_Right); }
+	};
+
+	template<>
+	struct BitXor<VType::V_AVX> final {
+		STL_INVOCABLE(BitXor)
+		using r = VIntrospect<VType::V_AVX>::template RType<uint8_t>;
+
+	public:
+		static STL_FORCEINLINE r invoke(r v_Left, r v_Right) noexcept { return _mm256_xor_si256(v_Left, v_Right); }
+	};
+
+	template<>
+	struct TestZero<VType::V_AVX> final {
+		STL_INVOCABLE(TestZero)
+		using r = VIntrospect<VType::V_AVX>::template RType<uint8_t>;
+
+	public:
+		static STL_FORCEINLINE bool invoke(r v_Reg) noexcept { return _mm256_testz_si256(v_Reg, v_Reg) != 0; }
+	};
+#endif
+
+#if STL_AVX512_SUPPORT
+	template<>
+	struct BitOr<VType::V_AVX512> final {
+		STL_INVOCABLE(BitOr)
+		using r = VIntrospect<VType::V_AVX512>::template RType<uint8_t>;
+
+	public:
+		static STL_FORCEINLINE r invoke(r v_Left, r v_Right) noexcept { return _mm512_or_si512(v_Left, v_Right); }
+	};
+
+	template<>
+	struct BitXor<VType::V_AVX512> final {
+		STL_INVOCABLE(BitXor)
+		using r = VIntrospect<VType::V_AVX512>::template RType<uint8_t>;
+
+	public:
+		static STL_FORCEINLINE r invoke(r v_Left, r v_Right) noexcept { return _mm512_xor_si512(v_Left, v_Right); }
+	};
+
+	template<>
+	struct TestZero<VType::V_AVX512> final {
+		STL_INVOCABLE(TestZero)
+		using r = VIntrospect<VType::V_AVX512>::template RType<uint8_t>;
+
+	public:
+		static STL_FORCEINLINE bool invoke(r v_Reg) noexcept { return _mm512_test_epi64_mask(v_Reg, v_Reg) == 0; }
+	};
+#endif
+
 	// Canonical software prefetch operations.
 	struct PrefetchRead final {
 		STL_INVOCABLE(PrefetchRead)

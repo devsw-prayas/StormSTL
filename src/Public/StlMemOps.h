@@ -20,79 +20,74 @@ namespace Stl::Memory {
 			}
 		}
 
-		// The three scanners below assume v_Size >= kWidth 
+		// Scanners keep a whole window of lanes live plus an accumulator and a constant; above 8
+		// lanes that overflows the 16 xmm/ymm registers and spills every window (SSE at 16: ~8x slower).
+		template<VType Type>
+		consteval size_t scanWindow() { return VIntrospect<Type>::UType::value < 8 ? VIntrospect<Type>::UType::value : 8; }
+
+		// The three scanners below assume v_Size >= kWidth. Each window is reduced in-register
+		// (OR of per-lane XOR / compare results) so the hot loop pays one test per window, and
+		// the per-lane masks are only extracted once a window is known to hit.
 
 		template<VType Type>
 		bool memEqual(const void* STL_RESTRICT p_Left, const void* STL_RESTRICT p_Right, size_t v_Size) {
 			const auto* l = static_cast<const uint8_t*>(p_Left);
 			const auto* rp = static_cast<const uint8_t*>(p_Right);
 			constexpr size_t width = VIntrospect<Type>::kWidth;
-			constexpr size_t window = VIntrospect<Type>::UType::value;
+			constexpr size_t window = scanWindow<Type>();
 			constexpr size_t advance = width * window;
-			constexpr uint64_t fullMask = width == 64 ? ~uint64_t(0) : ((uint64_t(1) << width) - 1);
 
-			// Per-lane mismatch bits; returns non-zero if any byte in the lane differs.
-			const auto missAt = [l, rp](size_t o) {
-				return (~byteEqualMask<Type>(Loadu<Type, uint8_t>::invoke(l + o),
-					Loadu<Type, uint8_t>::invoke(rp + o))) & fullMask;
+			const auto diff = [l, rp](size_t o) {
+				return BitXor<Type>::invoke(Loadu<Type, uint8_t>::invoke(l + o), Loadu<Type, uint8_t>::invoke(rp + o));
 			};
 
-			// Window loop: OR every lane's mismatch bits (no branch, no chain), test once.
 			size_t v = 0;
 			for (; v + advance <= v_Size; v += advance) {
-				uint64_t miss = 0;
-				Unrolled::staticFor<0, window>([&](auto idx) { miss |= missAt(v + idx * width); });
-				if (miss) return false;
+				typename VIntrospect<Type>::template RType<uint8_t> lanes[window];
+				Unrolled::staticFor<0, window>([&](auto idx) { lanes[idx] = diff(v + idx * width); });
+				auto acc = lanes[0];
+				Unrolled::staticFor<1, window>([&](auto idx) { acc = BitOr<Type>::invoke(acc, lanes[idx]); });
+				if (!TestZero<Type>::invoke(acc)) return false;
 			}
 			for (; v + width <= v_Size; v += width)
-				if (missAt(v)) return false;
-			return v == v_Size || missAt(v_Size - width) == 0;
+				if (!TestZero<Type>::invoke(diff(v))) return false;
+			return v == v_Size || TestZero<Type>::invoke(diff(v_Size - width));
 		}
 
 		template<VType Type>
 		int memCompare(const void* STL_RESTRICT p_Left, const void* STL_RESTRICT p_Right, size_t v_Size) {
+			using r = VIntrospect<Type>::template RType<uint8_t>;
 			const auto* l = static_cast<const uint8_t*>(p_Left);
 			const auto* rp = static_cast<const uint8_t*>(p_Right);
 			constexpr size_t width = VIntrospect<Type>::kWidth;
-			constexpr size_t window = VIntrospect<Type>::UType::value;
+			constexpr size_t window = scanWindow<Type>();
 			constexpr size_t advance = width * window;
 			constexpr uint64_t fullMask = width == 64 ? ~uint64_t(0) : ((uint64_t(1) << width) - 1);
+			const r zero = SetZero<Type, uint8_t>::invoke();
 
-			const auto missMask = [l, rp](size_t o) {
-				return (~byteEqualMask<Type>(Loadu<Type, uint8_t>::invoke(l + o),
-					Loadu<Type, uint8_t>::invoke(rp + o))) & fullMask;
+			const auto diff = [l, rp](size_t o) {
+				return BitXor<Type>::invoke(Loadu<Type, uint8_t>::invoke(l + o), Loadu<Type, uint8_t>::invoke(rp + o));
 			};
-			// SIZE_MAX = lane matches; else absolute offset of its first differing byte.
-			const auto diffAt = [&](size_t o) -> size_t {
-				const uint64_t m = missMask(o);
-				if (m == 0) return SIZE_MAX;
-				size_t b = 0;
-				while ((m & (uint64_t(1) << b)) == 0) ++b;
-				return o + b;
-			};
+			const auto missBits = [zero](r v_Diff) { return (~byteEqualMask<Type>(v_Diff, zero)) & fullMask; };
 			const auto sign = [l, rp](size_t o) { return l[o] < rp[o] ? -1 : 1; };
 
-			// Window loop: OR all lanes' mismatch bits, one branch; only on a hit
-			// window do the per-lane scan to locate the first differing byte.
 			size_t v = 0;
 			for (; v + advance <= v_Size; v += advance) {
-				uint64_t any = 0;
-				Unrolled::staticFor<0, window>([&](auto idx) { any |= missMask(v + idx * width); });
-				if (any) {
-					for (size_t k = 0; k < window; ++k) {
-						const size_t d = diffAt(v + k * width);
-						if (d != SIZE_MAX) return sign(d);
-					}
-				}
+				r lanes[window];
+				Unrolled::staticFor<0, window>([&](auto idx) { lanes[idx] = diff(v + idx * width); });
+				r acc = lanes[0];
+				Unrolled::staticFor<1, window>([&](auto idx) { acc = BitOr<Type>::invoke(acc, lanes[idx]); });
+				if (TestZero<Type>::invoke(acc)) continue;
+				for (size_t k = 0; k < window; ++k)
+					if (const uint64_t m = missBits(lanes[k]))
+						return sign(v + k * width + std::countr_zero(m));
 			}
-			for (; v + width <= v_Size; v += width) {
-				const size_t d = diffAt(v);
-				if (d != SIZE_MAX) return sign(d);
-			}
-			if (v != v_Size) {
-				const size_t d = diffAt(v_Size - width);
-				if (d != SIZE_MAX) return sign(d);
-			}
+			for (; v + width <= v_Size; v += width)
+				if (const uint64_t m = missBits(diff(v)))
+					return sign(v + std::countr_zero(m));
+			if (v != v_Size)
+				if (const uint64_t m = missBits(diff(v_Size - width)))
+					return sign(v_Size - width + std::countr_zero(m));
 			return 0;
 		}
 
@@ -101,43 +96,47 @@ namespace Stl::Memory {
 			using r = VIntrospect<Type>::template RType<uint8_t>;
 			const auto* p = static_cast<const uint8_t*>(p_Ptr);
 			constexpr size_t width = VIntrospect<Type>::kWidth;
-			constexpr size_t window = VIntrospect<Type>::UType::value;
+			constexpr size_t window = scanWindow<Type>();
 			constexpr size_t advance = width * window;
 			constexpr uint64_t fullMask = width == 64 ? ~uint64_t(0) : ((uint64_t(1) << width) - 1);
 			const r needle = Set1<Type, uint8_t>::invoke(v_Byte);
 
-			const auto hitMask = [p, needle](size_t o) {
+			const auto hitBits = [p, needle](size_t o) {
 				return byteEqualMask<Type>(Loadu<Type, uint8_t>::invoke(p + o), needle) & fullMask;
 			};
-			const auto hitAt = [&](size_t o) -> size_t {
-				const uint64_t m = hitMask(o);
-				if (m == 0) return SIZE_MAX;
-				size_t b = 0;
-				while ((m & (uint64_t(1) << b)) == 0) ++b;
-				return o + b;
-			};
 
-			// Window loop: OR all lanes' match bits, one branch; per-lane scan only
-			// on a hit window.
 			size_t v = 0;
-			for (; v + advance <= v_Size; v += advance) {
-				uint64_t any = 0;
-				Unrolled::staticFor<0, window>([&](auto idx) { any |= hitMask(v + idx * width); });
-				if (any) {
-					for (size_t k = 0; k < window; ++k) {
-						const size_t d = hitAt(v + k * width);
-						if (d != SIZE_MAX) return p + d;
-					}
+#if STL_AVX512_SUPPORT
+			if constexpr (Type == VType::V_AVX512) {
+				// Compares land in k-registers already, so OR the masks directly.
+				for (; v + advance <= v_Size; v += advance) {
+					uint64_t lanes[window];
+					uint64_t any = 0;
+					Unrolled::staticFor<0, window>([&](auto idx) { any |= lanes[idx] = hitBits(v + idx * width); });
+					if (!any) continue;
+					for (size_t k = 0; k < window; ++k)
+						if (lanes[k]) return p + v + k * width + std::countr_zero(lanes[k]);
+				}
+			} else
+#endif
+			{
+				for (; v + advance <= v_Size; v += advance) {
+					r lanes[window];
+					Unrolled::staticFor<0, window>([&](auto idx) {
+						lanes[idx] = CompareEqual<Type, uint8_t>::invoke(Loadu<Type, uint8_t>::invoke(p + v + idx * width), needle);
+					});
+					r acc = lanes[0];
+					Unrolled::staticFor<1, window>([&](auto idx) { acc = BitOr<Type>::invoke(acc, lanes[idx]); });
+					if (TestZero<Type>::invoke(acc)) continue;
+					for (size_t k = 0; k < window; ++k)
+						if (const uint64_t m = MoveMask<Type, uint8_t>::invoke(lanes[k]))
+							return p + v + k * width + std::countr_zero(m);
 				}
 			}
-			for (; v + width <= v_Size; v += width) {
-				const size_t d = hitAt(v);
-				if (d != SIZE_MAX) return p + d;
-			}
-			if (v != v_Size) {
-				const size_t d = hitAt(v_Size - width);
-				if (d != SIZE_MAX) return p + d;
-			}
+			for (; v + width <= v_Size; v += width)
+				if (const uint64_t m = hitBits(v)) return p + v + std::countr_zero(m);
+			if (v != v_Size)
+				if (const uint64_t m = hitBits(v_Size - width)) return p + v_Size - width + std::countr_zero(m);
 			return nullptr;
 		}
 
