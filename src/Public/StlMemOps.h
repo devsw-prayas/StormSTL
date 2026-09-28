@@ -247,42 +247,6 @@ namespace Stl::Memory {
 			}
 		}
 
-		void STL_FORCEINLINE copyMemoryStreamSSE(const void* STL_RESTRICT p_Src, void* STL_RESTRICT p_Dst, size_t v_Size) {
-			auto currSrc = static_cast<const unsigned char*>(p_Src);
-			auto currDst = static_cast<unsigned char*>(p_Dst);
-			constexpr auto advance = STL_SSE_UNROLL_WINDOW * VIntrospect<VType::V_SSE>::kWidth;
-			constexpr size_t prefetchAhead = 512;
-
-			for (size_t v = 0; v < v_Size; v += advance) {
-				for (size_t p = 0; p < advance; p += 64)
-					PrefetchRead::invoke<0>(currSrc + prefetchAhead + p);
-				Unrolled::staticFor<0, STL_SSE_UNROLL_WINDOW>([currSrc, currDst](auto idx) {
-					Stream<VType::V_SSE, uint8_t>::invoke(currDst + idx * 16,
-						Load<VType::V_SSE, uint8_t>::invoke(currSrc + idx * 16));
-				});
-				currSrc += advance;
-				currDst += advance;
-			}
-		}
-
-		void STL_FORCEINLINE copyMemoryStreamSrcUnalignedSSE(const void* STL_RESTRICT p_Src, void* STL_RESTRICT p_Dst, size_t v_Size) {
-			auto currSrc = static_cast<const unsigned char*>(p_Src);
-			auto currDst = static_cast<unsigned char*>(p_Dst);
-			constexpr auto advance = STL_SSE_UNROLL_WINDOW * VIntrospect<VType::V_SSE>::kWidth;
-			constexpr size_t prefetchAhead = 512;
-
-			for (size_t v = 0; v < v_Size; v += advance) {
-				for (size_t p = 0; p < advance; p += 64)
-					PrefetchRead::invoke<0>(currSrc + prefetchAhead + p);
-				Unrolled::staticFor<0, STL_SSE_UNROLL_WINDOW>([currSrc, currDst](auto idx) {
-					Stream<VType::V_SSE, uint8_t>::invoke(currDst + idx * 16,
-						Loadu<VType::V_SSE, uint8_t>::invoke(currSrc + idx * 16));
-				});
-				currSrc += advance;
-				currDst += advance;
-			}
-		}
-
 		void STL_FORCEINLINE copyMemoryReverseSSE(const void* p_Src, void* p_Dst, size_t v_Size) {
 			if (v_Size == 0) return;
 			auto currSrc = static_cast<const unsigned char*>(p_Src) + v_Size;
@@ -348,42 +312,6 @@ namespace Stl::Memory {
 			}
 		}
 
-		void STL_FORCEINLINE copyMemoryStreamAVX(const void* STL_RESTRICT p_Src, void* STL_RESTRICT p_Dst, size_t v_Size) {
-			auto currSrc = static_cast<const unsigned char*>(p_Src);
-			auto currDst = static_cast<unsigned char*>(p_Dst);
-			constexpr auto advance = STL_AVX_UNROLL_WINDOW * VIntrospect<VType::V_AVX>::kWidth;
-			constexpr size_t prefetchAhead = 512;
-
-			for (size_t v = 0; v < v_Size; v += advance) {
-				for (size_t p = 0; p < advance; p += 64)
-					PrefetchRead::invoke<0>(currSrc + prefetchAhead + p);
-				Unrolled::staticFor<0, STL_AVX_UNROLL_WINDOW>([currSrc, currDst](auto idx) {
-					Stream<VType::V_AVX, uint8_t>::invoke(currDst + idx * 32,
-						Load<VType::V_AVX, uint8_t>::invoke(currSrc + idx * 32));
-				});
-				currSrc += advance;
-				currDst += advance;
-			}
-		}
-
-		void STL_FORCEINLINE copyMemoryStreamSrcUnalignedAVX(const void* STL_RESTRICT p_Src, void* STL_RESTRICT p_Dst, size_t v_Size) {
-			auto currSrc = static_cast<const unsigned char*>(p_Src);
-			auto currDst = static_cast<unsigned char*>(p_Dst);
-			constexpr auto advance = STL_AVX_UNROLL_WINDOW * VIntrospect<VType::V_AVX>::kWidth;
-			constexpr size_t prefetchAhead = 512;
-
-			for (size_t v = 0; v < v_Size; v += advance) {
-				for (size_t p = 0; p < advance; p += 64)
-					PrefetchRead::invoke<0>(currSrc + prefetchAhead + p);
-				Unrolled::staticFor<0, STL_AVX_UNROLL_WINDOW>([currSrc, currDst](auto idx) {
-					Stream<VType::V_AVX, uint8_t>::invoke(currDst + idx * 32,
-						Loadu<VType::V_AVX, uint8_t>::invoke(currSrc + idx * 32));
-				});
-				currSrc += advance;
-				currDst += advance;
-			}
-		}
-
 		void STL_FORCEINLINE copyMemoryReverseAVX(const void* p_Src, void* p_Dst, size_t v_Size) {
 			if (v_Size == 0) return;
 			auto currSrc = static_cast<const unsigned char*>(p_Src) + v_Size;
@@ -441,42 +369,6 @@ namespace Stl::Memory {
 			for (size_t v = 0; v < v_Size; v += advance) {
 				Unrolled::staticFor<0, STL_AVX512_UNROLL_WINDOW>([currSrc, currDst](auto idx) {
 					Storeu<VType::V_AVX512, uint8_t>::invoke(currDst + idx * 64,
-						Loadu<VType::V_AVX512, uint8_t>::invoke(currSrc + idx * 64));
-				});
-				currSrc += advance;
-				currDst += advance;
-			}
-		}
-
-		void STL_FORCEINLINE copyMemoryStreamAVX512(const void* STL_RESTRICT p_Src, void* STL_RESTRICT p_Dst, size_t v_Size) {
-			auto currSrc = static_cast<const unsigned char*>(p_Src);
-			auto currDst = static_cast<unsigned char*>(p_Dst);
-			constexpr auto advance = STL_AVX512_UNROLL_WINDOW * VIntrospect<VType::V_AVX512>::kWidth;
-			constexpr size_t prefetchAhead = 512;
-
-			for (size_t v = 0; v < v_Size; v += advance) {
-				for (size_t p = 0; p < advance; p += 64)
-					PrefetchRead::invoke<0>(currSrc + prefetchAhead + p);
-				Unrolled::staticFor<0, STL_AVX512_UNROLL_WINDOW>([currSrc, currDst](auto idx) {
-					Stream<VType::V_AVX512, uint8_t>::invoke(currDst + idx * 64,
-						Load<VType::V_AVX512, uint8_t>::invoke(currSrc + idx * 64));
-				});
-				currSrc += advance;
-				currDst += advance;
-			}
-		}
-
-		void STL_FORCEINLINE copyMemoryStreamSrcUnalignedAVX512(const void* STL_RESTRICT p_Src, void* STL_RESTRICT p_Dst, size_t v_Size) {
-			auto currSrc = static_cast<const unsigned char*>(p_Src);
-			auto currDst = static_cast<unsigned char*>(p_Dst);
-			constexpr auto advance = STL_AVX512_UNROLL_WINDOW * VIntrospect<VType::V_AVX512>::kWidth;
-			constexpr size_t prefetchAhead = 512;
-
-			for (size_t v = 0; v < v_Size; v += advance) {
-				for (size_t p = 0; p < advance; p += 64)
-					PrefetchRead::invoke<0>(currSrc + prefetchAhead + p);
-				Unrolled::staticFor<0, STL_AVX512_UNROLL_WINDOW>([currSrc, currDst](auto idx) {
-					Stream<VType::V_AVX512, uint8_t>::invoke(currDst + idx * 64,
 						Loadu<VType::V_AVX512, uint8_t>::invoke(currSrc + idx * 64));
 				});
 				currSrc += advance;
@@ -585,48 +477,28 @@ namespace Stl::Memory {
 #endif
 		}
 
-		template<VType Type>
-		void memCopyStreamDispatch(const void* STL_RESTRICT p_Src, void* STL_RESTRICT p_Dst, size_t v_Size) {
-#if STL_AVX512_SUPPORT
-			if constexpr (Type == VType::V_AVX512) {
-				STL_ASSERT(v_Size % (STL_AVX512_UNROLL_WINDOW * VIntrospect<Type>::kWidth) == 0);
-				copyMemoryStreamAVX512(p_Src, p_Dst, v_Size);
-			}
-#endif
-#if STL_AVX_SUPPORT
-			if constexpr (Type == VType::V_AVX) {
-				STL_ASSERT(v_Size % (STL_AVX_UNROLL_WINDOW * VIntrospect<Type>::kWidth) == 0);
-				copyMemoryStreamAVX(p_Src, p_Dst, v_Size);
-			}
-#endif
-#if STL_SSE_SUPPORT
-			if constexpr (Type == VType::V_SSE) {
-				STL_ASSERT(v_Size % (STL_SSE_UNROLL_WINDOW * VIntrospect<Type>::kWidth) == 0);
-				copyMemoryStreamSSE(p_Src, p_Dst, v_Size);
-			}
-#endif
-		}
+		// Forward streaming copy: aligned non-temporal stores to dst. v_SrcAligned picks an
+		// aligned or unaligned load for src, since only dst can be aligned when offsets differ.
+		template<VType Type, bool v_SrcAligned>
+		void copyMemoryStream(const void* STL_RESTRICT p_Src, void* STL_RESTRICT p_Dst, size_t v_Size) {
+			using SrcLoad = std::conditional_t<v_SrcAligned, Load<Type, uint8_t>, Loadu<Type, uint8_t>>;
+			constexpr size_t width = VIntrospect<Type>::kWidth;
+			constexpr size_t window = VIntrospect<Type>::UType::value;
+			constexpr size_t advance = width * window;
+			constexpr size_t prefetchAhead = 512;
+			STL_ASSERT(v_Size % advance == 0);
 
-		template<VType Type>
-		void memCopyStreamSrcUnalignedDispatch(const void* STL_RESTRICT p_Src, void* STL_RESTRICT p_Dst, size_t v_Size) {
-#if STL_AVX512_SUPPORT
-			if constexpr (Type == VType::V_AVX512) {
-				STL_ASSERT(v_Size % (STL_AVX512_UNROLL_WINDOW * VIntrospect<Type>::kWidth) == 0);
-				copyMemoryStreamSrcUnalignedAVX512(p_Src, p_Dst, v_Size);
+			auto currSrc = static_cast<const unsigned char*>(p_Src);
+			auto currDst = static_cast<unsigned char*>(p_Dst);
+			for (size_t v = 0; v < v_Size; v += advance) {
+				for (size_t p = 0; p < advance; p += 64)
+					PrefetchRead::invoke<0>(currSrc + prefetchAhead + p);
+				Unrolled::staticFor<0, window>([currSrc, currDst](auto idx) {
+					Stream<Type, uint8_t>::invoke(currDst + idx * width, SrcLoad::invoke(currSrc + idx * width));
+				});
+				currSrc += advance;
+				currDst += advance;
 			}
-#endif
-#if STL_AVX_SUPPORT
-			if constexpr (Type == VType::V_AVX) {
-				STL_ASSERT(v_Size % (STL_AVX_UNROLL_WINDOW * VIntrospect<Type>::kWidth) == 0);
-				copyMemoryStreamSrcUnalignedAVX(p_Src, p_Dst, v_Size);
-			}
-#endif
-#if STL_SSE_SUPPORT
-			if constexpr (Type == VType::V_SSE) {
-				STL_ASSERT(v_Size % (STL_SSE_UNROLL_WINDOW * VIntrospect<Type>::kWidth) == 0);
-				copyMemoryStreamSrcUnalignedSSE(p_Src, p_Dst, v_Size);
-			}
-#endif
 		}
 
 		template<VType Type>

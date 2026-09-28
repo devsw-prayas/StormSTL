@@ -69,7 +69,7 @@ namespace Stl::Memory {
 		size_t done;
 		if (((d | s) & align) == 0) {
 			done = v_Size - (v_Size % advance);
-			Internal::memCopyStreamDispatch<backend>(src, dst, done);
+			Internal::copyMemoryStream<backend, true>(src, dst, done);
 		}
 		else {
 			// NT stores need an aligned dst; src offset may differ, so it rides along under Loadu.
@@ -78,7 +78,7 @@ namespace Stl::Memory {
 			const size_t skip = (align + 1 - (d & align)) & align;
 			const size_t rem = v_Size - skip;
 			done = skip + rem - (rem % advance);
-			Internal::memCopyStreamSrcUnalignedDispatch<backend>(src + skip, dst + skip, done - skip);
+			Internal::copyMemoryStream<backend, false>(src + skip, dst + skip, done - skip);
 		}
 		Internal::Fence<backend>::invoke();
 

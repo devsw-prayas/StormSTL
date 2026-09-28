@@ -16,7 +16,7 @@
 #endif
 
 namespace Stl::V {
-	enum class STL_RUNTIME_API VType : uint8_t {
+	enum class VType : uint8_t {
 #if STL_SSE_SUPPORT
 		V_SSE = 0,
 #endif
