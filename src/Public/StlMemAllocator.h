@@ -27,10 +27,6 @@
 #include <utility>
 #include <new>
 
-namespace Storm::STL::Memory {
-	struct NativeMemHandle;
-}
-
 namespace Storm::STL::Memory::Allocators {
 	struct AllocatorTrackingBase {
 	protected:
@@ -56,8 +52,8 @@ namespace Storm::STL::Memory::Allocators {
 							   "Arena must implement allocateImpl(bytes,align)->void*, allocateImpl(bytes)->void*, deallocateImpl()->void");
 		}
 
-		IArena(const IArena&) = default;
-		IArena& operator=(const IArena&) = default;
+		IArena(const IArena&) = delete;
+		IArena& operator=(const IArena&) = delete;
 		IArena(IArena&&) noexcept = default;
 		IArena& operator=(IArena&&) noexcept = default;
 		~IArena() = default;
@@ -112,15 +108,11 @@ namespace Storm::STL::Memory::Allocators {
 			}
 		}
 
-		IAllocator(const IAllocator&) = default;
-		IAllocator& operator=(const IAllocator&) = default;
+		IAllocator(const IAllocator&) = delete;
+		IAllocator& operator=(const IAllocator&) = delete;
 		IAllocator(IAllocator&&) noexcept = default;
 		IAllocator& operator=(IAllocator&&) noexcept = default;
 		~IAllocator() = default;
-
-		void init(NativeMemHandle* p_Handle) noexcept {
-			m_UnderlyingArena.init(p_Handle);
-		}
 
 		// ---- Raw (T = void) ----
 		STL_NODISCARD_MSG("Cannot discard allocated block pointer")
@@ -146,11 +138,6 @@ namespace Storm::STL::Memory::Allocators {
 			static_cast<derived_*>(this)->deallocateImpl(p_Ptr, v_Size);
 		}
 
-		// Whole-arena discard. Derived types that track extra state on top of the Arena
-		void reset() requires std::is_void_v<T> {
-			m_UnderlyingArena.reset();
-		}
-
 		// Pure-bump defaults: forward straight to the Arena, no individual reclaim.
 		void* allocateImpl(size_t v_Bytes, size_t v_Alignment) requires std::is_void_v<T> {
 			return m_UnderlyingArena.allocate(v_Bytes, v_Alignment);
@@ -161,6 +148,18 @@ namespace Storm::STL::Memory::Allocators {
 		}
 
 		void deallocateImpl(void*, size_t) noexcept requires std::is_void_v<T> {}
+
+		// ---- Both forms ----
+
+		// Whole-arena discard. Dispatches like IArena::reset so a derived allocator that tracks
+		// extra state on top of the Arena can override resetImpl.
+		void reset() {
+			static_cast<derived_*>(this)->resetImpl();
+		}
+
+		void resetImpl() {
+			m_UnderlyingArena.reset();
+		}
 
 		// ---- Typed (T != void) ----
 		// Forward scaffolding only - not consumed by any concrete allocator yet.

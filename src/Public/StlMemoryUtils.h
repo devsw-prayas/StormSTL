@@ -38,6 +38,7 @@ namespace Storm::STL::Memory {
 		void* m_BaseAddress;
 		size_t m_TotalSize;
 		size_t m_CommittedSize;
+		MemoryFlags m_Flags;
 
 		NativeMemHandle() = default;
 		~NativeMemHandle() = default;
@@ -54,6 +55,7 @@ namespace Storm::STL::Memory {
 		void setTotalSize(size_t v_TotalSize) noexcept;
 		void growCommitted(size_t v_Delta) noexcept;
 		void shrinkCommitted(size_t v_Delta) noexcept;
+		void setFlags(MemoryFlags v_Flags) noexcept;
 	};
 
 	constexpr NativeMemHandle INVALID_NATIVE_HANDLE{};

@@ -122,6 +122,15 @@ set(STL_UNROLL_WINDOW 0 CACHE STRING
 set(STL_NT_JUMP_SIZE 262144 CACHE STRING
     "Minimum byte size before non-temporal memory operations are considered")
 
+set(STL_HEAP_INITIAL_SIZE 524288 CACHE STRING
+    "Bytes the StlHeap commits up front (512 KiB)")
+
+set(STL_HEAP_MAX_SIZE 68719476736 CACHE STRING
+    "Bytes of address space the StlHeap reserves, i.e. its growth ceiling (64 GiB)")
+
+set(STL_HEAP_GROW_CHUNK 16384 CACHE STRING
+    "Minimum bytes the StlHeap commits per growth step (16 KiB)")
+
 foreach(window
         STL_DEFAULT_UNROLL_WINDOW_SSE
         STL_DEFAULT_UNROLL_WINDOW_AVX
@@ -140,10 +149,28 @@ if(NOT ${STL_NT_JUMP_SIZE} MATCHES "^[1-9][0-9]*$")
     message(FATAL_ERROR "STL_NT_JUMP_SIZE must be a positive integer")
 endif()
 
+foreach(heap_opt STL_HEAP_INITIAL_SIZE STL_HEAP_MAX_SIZE STL_HEAP_GROW_CHUNK)
+    if(NOT ${${heap_opt}} MATCHES "^[1-9][0-9]*$")
+        message(FATAL_ERROR "${heap_opt} must be a positive integer")
+    endif()
+endforeach()
+
+if(STL_HEAP_INITIAL_SIZE GREATER STL_HEAP_MAX_SIZE)
+    message(FATAL_ERROR "STL_HEAP_INITIAL_SIZE must not exceed STL_HEAP_MAX_SIZE")
+endif()
+
+math(EXPR STL_HEAP_GROW_CHUNK_REM "${STL_HEAP_GROW_CHUNK} % 4096")
+if(NOT STL_HEAP_GROW_CHUNK_REM EQUAL 0)
+    message(FATAL_ERROR "STL_HEAP_GROW_CHUNK must be a multiple of 4096")
+endif()
+
 target_compile_definitions(StormSTL PUBLIC
     STL_DEFAULT_UNROLL_WINDOW_SSE=${STL_DEFAULT_UNROLL_WINDOW_SSE}
     STL_DEFAULT_UNROLL_WINDOW_AVX=${STL_DEFAULT_UNROLL_WINDOW_AVX}
     STL_DEFAULT_UNROLL_WINDOW_AVX512=${STL_DEFAULT_UNROLL_WINDOW_AVX512}
     STL_UNROLL_WINDOW=${STL_UNROLL_WINDOW}
     STL_NT_JUMP_SIZE=${STL_NT_JUMP_SIZE}
+    STL_HEAP_INITIAL_SIZE=${STL_HEAP_INITIAL_SIZE}
+    STL_HEAP_MAX_SIZE=${STL_HEAP_MAX_SIZE}
+    STL_HEAP_GROW_CHUNK=${STL_HEAP_GROW_CHUNK}
 )

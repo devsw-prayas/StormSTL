@@ -30,6 +30,7 @@ namespace Storm::STL::Memory {
 		m_BaseAddress = nullptr;
 		m_TotalSize = 0;
 		m_CommittedSize = 0;
+		m_Flags = MemoryFlags::NONE;
 	}
 
 	void NativeMemHandle::setBaseAddress(void* p_BaseAddress) noexcept {
@@ -48,6 +49,10 @@ namespace Storm::STL::Memory {
 	void NativeMemHandle::shrinkCommitted(size_t v_Delta) noexcept {
 		STL_ASSERT(v_Delta <= m_CommittedSize);
 		m_CommittedSize -= v_Delta;
+	}
+
+	void NativeMemHandle::setFlags(MemoryFlags v_Flags) noexcept {
+		m_Flags = v_Flags;
 	}
 
 	void NativeMemDesc::init() noexcept {
@@ -114,6 +119,38 @@ namespace Storm::STL::Memory::Internal {
 		munmap(p_Base, v_TotalSize);
 #endif
 	}
+
+	size_t largePageSize() {
+#if defined(_WIN32)
+		return GetLargePageMinimum();
+#elif defined(__linux__)
+		return static_cast<size_t>(2) * 1024 * 1024;
+#else
+		return 0;
+#endif
+	}
+
+#if defined(_WIN32)
+	bool enableLockMemoryPrivilege() {
+		static const bool s_Enabled = [] {
+			HANDLE token = nullptr;
+			if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &token))
+				return false;
+
+			TOKEN_PRIVILEGES privileges{};
+			privileges.PrivilegeCount = 1;
+			privileges.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+
+			// AdjustTokenPrivileges succeeds even when the privilege isn't held; only GetLastError tells.
+			bool ok = LookupPrivilegeValue(nullptr, SE_LOCK_MEMORY_NAME, &privileges.Privileges[0].Luid)
+				&& AdjustTokenPrivileges(token, FALSE, &privileges, 0, nullptr, nullptr)
+				&& GetLastError() == ERROR_SUCCESS;
+			CloseHandle(token);
+			return ok;
+		}();
+		return s_Enabled;
+	}
+#endif
 
 	const NativePageInfo& pageInfo() {
 		static const NativePageInfo s_PageInfo = [] {

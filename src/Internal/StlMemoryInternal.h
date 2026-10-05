@@ -32,8 +32,12 @@ namespace Storm::STL::Memory::Internal {
 
 	void releaseRaw(void* p_Base, size_t v_TotalSize);
 
+	// 0 when the platform has no large-page support.
+	size_t largePageSize();
+
 #if defined(_WIN32)
 	DWORD toWin32Protect(MemoryProtect v_Protect);
+	bool enableLockMemoryPrivilege();
 #elif defined(__linux__)
 	int toPosixProtect(MemoryProtect v_Protect);
 #endif

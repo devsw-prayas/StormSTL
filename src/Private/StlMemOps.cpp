@@ -90,7 +90,7 @@ namespace Stl::Memory {
 
 	// TODO: implement.
 	void memMove(void*, const void*, size_t) {
-
+		STL_TRAP();
 	}
 
 	namespace {
