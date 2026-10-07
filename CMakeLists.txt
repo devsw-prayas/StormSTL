@@ -174,3 +174,12 @@ target_compile_definitions(StormSTL PUBLIC
     STL_HEAP_MAX_SIZE=${STL_HEAP_MAX_SIZE}
     STL_HEAP_GROW_CHUNK=${STL_HEAP_GROW_CHUNK}
 )
+
+# AUTO follows _DEBUG (set by the debug CRT); ON/OFF pin it. StormSTL-scoped, so it never collides with a host's DEBUG.
+set(STL_ENABLE_DEBUG_CHECKS AUTO CACHE STRING "StormSTL asserts: AUTO (follow _DEBUG), ON or OFF")
+set_property(CACHE STL_ENABLE_DEBUG_CHECKS PROPERTY STRINGS AUTO ON OFF)
+if (STL_ENABLE_DEBUG_CHECKS STREQUAL "ON")
+    target_compile_definitions(StormSTL PUBLIC STL_DEBUG_CHECKS=1)
+elseif (STL_ENABLE_DEBUG_CHECKS STREQUAL "OFF")
+    target_compile_definitions(StormSTL PUBLIC STL_DEBUG_CHECKS=0)
+endif()

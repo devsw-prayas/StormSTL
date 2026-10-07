@@ -1,13 +1,15 @@
 #pragma once
 #include <StlCompiler.h>
 
-#if defined(_DEBUG) || defined(DEBUG)
+// STL_DEBUG_CHECKS (0/1) comes from STL_ENABLE_DEBUG_CHECKS=ON/OFF; unset (AUTO) follows _DEBUG.
+#if defined(STL_DEBUG_CHECKS)
+#define STL_BUILD_DEBUG STL_DEBUG_CHECKS
+#elif defined(_DEBUG)
 #define STL_BUILD_DEBUG 1
-#define STL_BUILD_RELEASE 0
 #else
 #define STL_BUILD_DEBUG 0
-#define STL_BUILD_RELEASE 1
 #endif
+#define STL_BUILD_RELEASE (!STL_BUILD_DEBUG)
 
 #if STL_BUILD_DEBUG
 #define STL_ASSERT(expr)                        \
